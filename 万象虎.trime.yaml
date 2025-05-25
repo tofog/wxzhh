@@ -317,7 +317,7 @@ preset_color_schemes:
     # border_color: back_color #悬浮窗边框
     # label_color: hilited_text_color #标签（候选序号）
     # text_back_color: back_color #编码区背景
-    text_color: 0x047BD8 #编码 色
+    text_color: 0x333333 #编码 色
     # hilited_back_color: back_color #高亮编码背景
     hilited_text_color: 0x333333 #高亮编码 黑
 
@@ -327,7 +327,7 @@ preset_color_schemes:
     # candidate_text_color: hilited_text_color #候选文字
     comment_text_color: 0x808080 #提示
     # hilited_candidate_back_color: back_color #高亮候选背景
-    # hilited_candidate_text_color: text_color #高亮候选文字
+    hilited_candidate_text_color: 0x2090FF #高亮候选文字
     # hilited_comment_text_color: hilited_candidate_text_color #高亮提示
 
     # 键盘通用
@@ -385,7 +385,7 @@ preset_color_schemes:
     # label_color: hilited_text_color #标签（候选序号）
     text_back_color: 0xFFFFFF #编码区背景
     text_color: 0x627178 #编码
-    hilited_back_color: 0xFFFFFF #高亮编码背景
+    hilited_back_color: 0x11 #高亮编码背景
     hilited_text_color: 0x333333 #高亮编码
     # 候选栏
     # candidate_separator_color: back_color #候选分割线
@@ -449,7 +449,7 @@ preset_color_schemes:
     # border_color: back_color #悬浮窗边框
     # label_color: hilited_text_color #标签（候选序号）
     # text_back_color: back_color #编码区背景
-    text_color: 0x6EACA8 #编码
+    text_color: 0xDDDDDD #编码
     # hilited_back_color: back_color #高亮编码背景
     hilited_text_color: 0xDDDDDD #高亮编码
 
@@ -459,7 +459,7 @@ preset_color_schemes:
     # candidate_text_color: hilited_text_color #候选文字
     comment_text_color: 0xBBBBBB #提示
     # hilited_candidate_back_color: back_color #高亮候选背景
-    # hilited_candidate_text_color: text_color #高亮候选文字
+    hilited_candidate_text_color: 0x6EACA8 #高亮候选文字
     # hilited_comment_text_color: hilited_candidate_text_color #高亮提示
 
     # 键盘通用
@@ -516,9 +516,9 @@ preset_color_schemes:
     # border_color: back_color #悬浮窗边框
     # label_color: hilited_text_color #标签（候选序号）
     # text_back_color: back_color #编码区背景
-    text_color: 0x5CB5AB #编码
+    text_color: 0x333333 #编码
     # hilited_back_color: back_color #高亮编码背景
-    hilited_text_color: 0x627178 #高亮编码
+    hilited_text_color: 0x333333 #高亮编码
 
     # 候选栏
     # candidate_separator_color: back_color #候选分割线
@@ -535,7 +535,7 @@ preset_color_schemes:
     # shadow_color: back_color #按键文字阴影
     # preview_back_color: back_color #按键提示背景
     # preview_text_color: key_text_color #按键提示文字
-    # key_text_color: candidate_text_color #按键文字
+    # key_text_color: candidate_text_col人or #按键文字
     key_symbol_color: 0x627178 #按键符号
     hilited_key_text_color: 0x333333 #高亮按键文字
     # hilited_key_symbol_color: key_symbol_color #高亮按键符号
@@ -584,9 +584,9 @@ preset_color_schemes:
     # border_color: back_color #悬浮窗边框
     # label_color: hilited_text_color #标签（候选序号）
     # text_back_color: back_color #编码区背景
-    text_color: 0xbc763c #编码 色
+    text_color: 0x333333 #编码 色
     # hilited_back_color: back_color #高亮编码背景
-    hilited_text_color: 0xff5a676e #高亮编码 黑
+    hilited_text_color: 0x333333 #高亮编码 黑
 
     # 候选栏
     # candidate_separator_color: back_color #候选分割线
@@ -594,7 +594,7 @@ preset_color_schemes:
     # candidate_text_color: hilited_text_color #候选文字
     comment_text_color: 0x7b868c #提示
     # hilited_candidate_back_color: back_color #高亮候选背景
-    # hilited_candidate_text_color: text_color #高亮候选文字
+    hilited_candidate_text_color: 0xbc763c #高亮候选文字
     # hilited_comment_text_color: hilited_candidate_text_color #高亮提示
 
     # 键盘通用
@@ -3203,16 +3203,20 @@ preset_keyboards:
       - 'keys/@40/height': { __include: conf/key_height_last }
     keys:
       # 数字行
-      - {click: num1, __include: conf/num_line}
-      - {click: num2}
-      - {click: num3}
-      - {click: num4}
-      - {click: num5}
-      - {click: num6}
-      - {click: num7}
-      - {click: num8}
-      - {click: num9}
-      - {click: num0}
+      - {
+          click: num1, 
+          height: 40,
+          __include: styl/key,
+        }     
+      - {click: num2,  __include: styl/key }
+      - {click: num3,  __include: styl/key }
+      - {click: num4,  __include: styl/key }
+      - {click: num5,  __include: styl/key }
+      - {click: num6,  __include: styl/key }
+      - {click: num7,  __include: styl/key }
+      - {click: num8,  __include: styl/key }
+      - {click: num9,  __include: styl/key }
+      - {click: num0,  __include: styl/key }
       # 第 1 行
       - { click: 'q', long_click: '!',  __include: styl/key }
       - { click: 'w', long_click: '@',  __include: styl/key }
@@ -3272,7 +3276,7 @@ preset_keyboards:
       - { click: 'k', long_click: '(', __include: styl/key, swipe_down: rightyi, hint: '右移' }
       - { click: 'l', long_click: ")", swipe_down: "_", __include: styl/key }
       # 第 3 行
-      - { click: Shift_L, composing: split_word, width: 15 }   
+      - { click: Shift_L, composing: split_word, width: 15, __include: styl/key }   
 #      - { click: Shift_L, width: 15 }
       - { click: 'z',long_click: 'fanyinhao', __include: styl/key }
       - { click: 'x', long_click: cut, __include: styl/key }
@@ -3291,6 +3295,7 @@ preset_keyboards:
       - { click: 'm', long_click: 'fenhao', __include: styl/key }
       - { click: BS, width: 15, 
           swipe_up: 'Escape',
+          __include: styl/key, 
         }
       # 第 4 行
       - {
@@ -3298,14 +3303,14 @@ preset_keyboards:
           long_click: Color_switch,
           composing: Tab,
           width: 12,
-          __include: styl/off_key,
+          __include: styl/key,
         }     
       - {
           click: Keyboard_number,
           long_click: Menu,
           composing: xiegang,
           width: 12,      
-          __include: styl/off_key,
+          __include: styl/key,
           __patch: conf/key_height_last,
         }  
       - { click: 'douhao', 
@@ -3334,7 +3339,7 @@ preset_keyboards:
       - {
           click: 'Mode_switch',
           composing: CommitScriptText,
-          __include: styl/off_key,  
+          __include: styl/key,  
         }
       - {
           click: Return,

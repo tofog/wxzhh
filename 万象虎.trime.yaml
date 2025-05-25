@@ -3954,7 +3954,7 @@ preset_keys:
   liquid_keyboard_switch: { label: 更多, send: function, command: liquid_keyboard, option: "更多" }
   liquid_keyboard_exit: {label: 返回, send: function, command: liquid_keyboard, option: "-1"}  #退出liquidkeyboard
   liquid_keyboard_emoji: { label: 🙂, send: function, command: liquid_keyboard, option: "emoji" }
-  liquid_keyboard_clipboard: { label: 剪贴·同文, send: function, command: liquid_keyboard, option: "剪贴" }
+  liquid_keyboard_clipboard: { label: 剪贴, send: function, command: liquid_keyboard, option: "剪贴" }
   clip_board: {label: Control+Shift+v, send: Control+Shift+v}
   _Keyboard_clip: {label: 剪贴, functional: false, send: Eisu_toggle, select: _clip_board}
   # rime组合键

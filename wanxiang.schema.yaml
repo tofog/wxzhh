@@ -1507,8 +1507,8 @@ pinyin:
 
 tiger_sentence:
   dictionary: tiger
+  user_dict: ti
   db_class: stabledb
-  enable_user_dict: false
   enable_completion: false
   enable_sentence: true
   initial_quality: 99

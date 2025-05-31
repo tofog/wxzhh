@@ -1,7 +1,7 @@
 
 local M = {}
 
--- **获取辅助码**
+-- 获取辅助码
 function M.run_fuzhu(cand, initial_comment)
     local full_fuzhu_list, first_fuzhu_list = {}, {}
 
@@ -20,7 +20,7 @@ function M.run_fuzhu(cand, initial_comment)
 
     return full_fuzhu_list, first_fuzhu_list
 end
--- **初始化**
+-- 初始化
 function M.init(env)
     local config = env.engine.schema.config
     env.settings = {
@@ -28,7 +28,7 @@ function M.init(env)
     }
 end
 
-    -- **判断是否为字母或数字和特定符号**
+    -- 判断是否为字母或数字和特定符号
 local function is_alnum(text)
     return text:match("[%w%s.·-_']") ~= nil
 end
@@ -58,6 +58,7 @@ function M.func(input, env)
     local context = env.engine.context
     local input_preedit = context:get_preedit().text
     -- 候选词存储
+    local candidates = {}       -- 全部候选词
     local fc_candidates = {}    -- 反查候选词
     local kfxg_candidates = {}    -- 包含斜杠的候选词
     local kffh_candidates = {}    -- 包含分号的候选词
@@ -71,6 +72,9 @@ function M.func(input, env)
 
     -- 候选词收集
     for cand in input:iter() do
+        table.insert(candidates, cand)
+    end
+    for _, cand in ipairs(candidates) do
         local text = cand.text or ""
         local seg = context.composition:back()
         env.is_radical_mode = seg and (
@@ -221,8 +225,23 @@ function M.func(input, env)
         end
     else
         
+        
         -- 🐯 虎单开关与虎词开关
-        if context:get_option("tiger") and context:get_option("tigress") then
+        if context:get_option("tiger") and not context:get_option("tigress") and not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") then
+            if utf8.len(env.engine.context.input) == 4 and #tiger_candidates == 1 then
+                env.engine:commit_text(tiger_candidates[1].text)
+                context:clear()
+            elseif utf8.len(env.engine.context.input) >= 4 and #tiger_candidates == 0 and #fc_candidates == 0 and #kfxg_candidates == 0 and #digit_candidates == 0 then
+                context:clear()
+            else
+               for _, cand in ipairs(tiger_candidates) do
+                   yield(cand)
+               end
+               for _, cand in ipairs(onekf) do
+                   yield(cand)
+               end
+            end
+        elseif context:get_option("tiger") and context:get_option("tigress") then
             for _, cand in ipairs(tiger_tigress) do
                 yield(cand)
             end
@@ -269,31 +288,31 @@ function M.func(input, env)
     local input_code = env.engine.context.input
     local input_len = utf8.len(input_code)
 
-    -- **提前获取第一个候选项**
+    -- 提前获取第一个候选项
     local first_cand = nil
-    local candidates = {}  -- 用于缓存候选词，防止迭代器消耗
+    local yin_candidates = {}  -- 用于缓存候选词，防止迭代器消耗
     if context:get_option("yin") and not context:get_option("english_word") or input_preedit:find("`") then
       for _, cand in ipairs(other_candidates) do
           if not first_cand then first_cand = cand end
-          table.insert(candidates, cand)
+          table.insert(yin_candidates, cand)
       end
     end
-    -- **如果输入码长 > 4，则直接输出默认排序**
-    for _, cand in ipairs(candidates) do 
+    -- 如果输入码长 > 4，则直接输出默认排序
+    for _, cand in ipairs(yin_candidates) do 
         if input_len > 4 then
             yield(cand) 
         end
     end
-    -- **如果第一个候选是字母/数字，则直接返回默认候选**
+    -- 如果第一个候选是字母/数字，则直接返回默认候选
     if first_cand and is_alnum(first_cand.text) then
-        for _, cand in ipairs(candidates) do yield(cand) end
+        for _, cand in ipairs(yin_candidates) do yield(cand) end
         return
     end
     local single_char_cands, alnum_cands, other_cands = {}, {}, {}
 
     if input_len >= 3 and input_len <= 4 then
-        -- **分类候选**
-        for _, cand in ipairs(candidates) do
+        -- 分类候选
+        for _, cand in ipairs(yin_candidates) do
             if is_alnum(cand.text) then
                 table.insert(alnum_cands, cand)
             elseif utf8.len(cand.text) == 1 then
@@ -307,14 +326,14 @@ function M.func(input, env)
         local has_match = false
         local moved, reordered = {}, {}
 
-        -- **如果 `other_cands` 为空，说明所有非字母数字候选都是单字**
+        -- 如果 `other_cands` 为空，说明所有非字母数字候选都是单字
         if #other_cands == 0 then
             for _, cand in ipairs(single_char_cands) do
                 table.insert(moved, cand)
                 has_match = true
             end
         else
-            -- **匹配 `first` 和 `full`**
+            -- 匹配 `first` 和 `full`
             for _, cand in ipairs(single_char_cands) do
                 local full, first = M.run_fuzhu(cand, cand.comment or "")
                 local matched = false
@@ -344,7 +363,7 @@ function M.func(input, env)
                 end
             end
         end
-        -- **动态排序逻辑**
+        -- 动态排序逻辑
         if has_match then
             for _, v in ipairs(other_cands) do yield(v) end
             for _, v in ipairs(moved) do yield(v) end
@@ -357,8 +376,8 @@ function M.func(input, env)
             for _, v in ipairs(reordered) do yield(v) end
         end
 
-    else  -- **处理 input_len < 3 的情况**
-        for _, cand in ipairs(candidates) do yield(cand) end
+    else  -- 处理 input_len < 3 的情况
+        for _, cand in ipairs(yin_candidates) do yield(cand) end
     end
     
     if context:get_option("yin") then

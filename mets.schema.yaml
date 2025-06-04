@@ -19,9 +19,7 @@ switches:
     states: [ 隐, 拆显 ]   
   - name: charset_filter
     states: [ 小, 大字集 ]
-    reset: 0
   - name: pinyin  #拼音滤镜
-    reset: 0
     states: [ 关, 字pīn ]
   - name: tiger-sentence
     states: [关, 虎句]
@@ -45,13 +43,10 @@ switches:
     states: [ ¥, $ ]
   - name: full_shape
     states: [ 半角, 全角 ]
-    reset: 0   
   - options: [ s2s, s2t, s2hk, s2tw ]
-    reset: 0
     states: [ 简体, 通繁, 港繁, 臺繁 ]
   - name: emoji
     states: [ 🙃, 😄 ]
-    reset: 0
   - name: udpf_switch
     states: [ 关, U编]
   - name: chinese_english

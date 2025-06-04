@@ -3369,16 +3369,20 @@ preset_keyboards:
       - 'keys/@40/height': { __include: conf/key_height_last }
     keys:
       # 数字行
-      - {click: num1, __include: conf/num_line}
-      - {click: num2}
-      - {click: num3}
-      - {click: num4}
-      - {click: num5}
-      - {click: num6}
-      - {click: num7}
-      - {click: num8}
-      - {click: num9}
-      - {click: num0}
+      - {
+          click: num1, 
+          height: 40,
+          __include: styl/key,
+        }     
+      - {click: num2,  __include: styl/key }
+      - {click: num3,  __include: styl/key }
+      - {click: num4,  __include: styl/key }
+      - {click: num5,  __include: styl/key }
+      - {click: num6,  __include: styl/key }
+      - {click: num7,  __include: styl/key }
+      - {click: num8,  __include: styl/key }
+      - {click: num9,  __include: styl/key }
+      - {click: num0,  __include: styl/key }
       # 第 1 行
       - { click: '18keyq', long_click: '!', swipe_down: 'fanxiegang', hint: '\', width: 14.3, __include: styl/key }
       - { click: '18keywe', long_click: '@', swipe_down: "{", hint: "{", width: 14.3, __include: styl/key }
@@ -3395,21 +3399,21 @@ preset_keyboards:
       - { click: '18keyjk', long_click: '"', __include: styl/key, width: 16.6 }
       - { click: '18keyl', long_click: "'", __include: styl/key, width: 16.6 }
       # 第 3 行
-      - { click: liquid_keyboard_clipboard, composing: split_word, width: 14.3 }   
+      - { click: liquid_keyboard_clipboard, composing: split_word, width: 14.3, __include: styl/key }   
 #      - { click: Shift_L, width: 15 }
       - { click: '18keyz',long_click: 'fanyinhao', width: 14.3, __include: styl/key }
       - { click: '18keyxc', long_click: copy, width: 14.3, __include: styl/key }
       - { click: '18keyv', long_click: paste, width: 14.3, __include: styl/key }
       - { click: '18keybn', long_click: ":", width: 14.3, __include: styl/key }
       - { click: '18keym', long_click: ';', width: 14.3, __include: styl/key }
-      - { click: BS, width: 14.3, swipe_up: 'Escape' }
+      - { click: BS, width: 14.3, swipe_up: 'Escape', __include: styl/key }
       # 第 4 行
-      - { click: 18Keyboard_symbols, long_click: Color_switch, composing: Tab, width: 11.5, __include: styl/off_key }     
-      - { click: 18Keyboard_number, composing: xiegang, width: 11.5, __include: styl/off_key, __patch: conf/key_height_last }  
+      - { click: 18Keyboard_symbols, long_click: Color_switch, composing: Tab, width: 11.5, __include: styl/key }     
+      - { click: 18Keyboard_number, long_click: Menu, composing: xiegang, width: 11.5, __include: styl/key, __patch: conf/key_height_last }  
       - { click: '，', label: '，', long_click: '、', width: 10, key_symbol_offset_x: 4, __include: styl/key,  } 
       - { click: space, swipe_up: Clear, swipe_down: liquid_keyboard_clipboard, key_symbol_offset_x: 0, width: 30, key_back_color: space_back_color, hilited_key_back_color: hilited_space_back_color }      
       - { click: '。', label: '。', long_click: '？', width: 10, key_symbol_offset_x: 4, __include: styl/key }
-      - { click: 'Keyboard_letter_18jian', composing: "CommitScriptText", width: 11.5, __include: styl/off_key }
+      - { click: 'Keyboard_letter_18jian', composing: "CommitScriptText", width: 11.5, __include: styl/key }
       - {
           click: Return,
           long_click: kb_func,
@@ -3436,16 +3440,20 @@ preset_keyboards:
       - 'keys/@40/height': { __include: conf/key_height_last }
     keys:
       # 数字行
-      - {click: num1, __include: conf/num_line}
-      - {click: num2}
-      - {click: num3}
-      - {click: num4}
-      - {click: num5}
-      - {click: num6}
-      - {click: num7}
-      - {click: num8}
-      - {click: num9}
-      - {click: num0}
+      - {
+          click: num1, 
+          height: 40,
+          __include: styl/key,
+        }     
+      - {click: num2,  __include: styl/key }
+      - {click: num3,  __include: styl/key }
+      - {click: num4,  __include: styl/key }
+      - {click: num5,  __include: styl/key }
+      - {click: num6,  __include: styl/key }
+      - {click: num7,  __include: styl/key }
+      - {click: num8,  __include: styl/key }
+      - {click: num9,  __include: styl/key }
+      - {click: num0,  __include: styl/key }
       # 第 1 行
       - { click: '14keyqw', long_click: '!', swipe_down: '\', hint: '\', width: 20, __include: styl/key }
       - { click: '14keyer', long_click: '@', swipe_down: "{", hint: "{", width: 20, __include: styl/key }
@@ -3459,19 +3467,19 @@ preset_keyboards:
       - { click: '14keyjk', long_click: '"', width: 20, swipe_down: ">", hint: ">", __include: styl/key }
       - { click: '14keyl', long_click: "danyinhao", swipe_down: "/", hint: "/", width: 20, __include: styl/key }
       # 第 3 行
-      - { click: liquid_keyboard_clipboard, composing: split_word, width: 16 }
+      - { click: liquid_keyboard_clipboard, composing: split_word, width: 16, __include: styl/key }
       - { click: '14keyzx', long_click: "copy", width: 17, __include: styl/key }
       - { click: '14keycv', long_click: 'paste', __include: styl/key, width: 17 }
       - { click: '14keybn', long_click: ':', __include: styl/key, width: 17 }
       - { click: '14keym', long_click: "fenhao", __include: styl/key, width: 17 }
-      - { click: BS, width: 16, swipe_up: 'Escape' }
+      - { click: BS, width: 16, swipe_up: 'Escape', __include: styl/key }
       # 第 4 行
-      - { click: 14Keyboard_symbols, long_click: Color_switch, composing: Tab, width: 11.5, __include: styl/off_key }     
-      - { click: 14Keyboard_number, composing: xiegang, width: 11.5, __include: styl/off_key, __patch: conf/key_height_last }  
+      - { click: 14Keyboard_symbols, long_click: Color_switch, composing: Tab, width: 11.5, __include: styl/key }     
+      - { click: 14Keyboard_number, long_click: Menu, composing: xiegang, width: 11.5, __include: styl/key, __patch: conf/key_height_last }  
       - { click: '，', label: '，', long_click: '、', width: 10, key_symbol_offset_x: 4, __include: styl/key,  } 
       - { click: space, swipe_up: Clear, swipe_down: liquid_keyboard_clipboard, key_symbol_offset_x: 0, width: 30, key_back_color: space_back_color, hilited_key_back_color: hilited_space_back_color }      
       - { click: '。', label: '。', long_click: '？', width: 10, key_symbol_offset_x: 4, __include: styl/key }
-      - { click: 'Keyboard_letter_14jian', composing: "CommitScriptText", width: 11.5, __include: styl/off_key }
+      - { click: 'Keyboard_letter_14jian', composing: "CommitScriptText", width: 11.5, __include: styl/key }
       - {
           click: Return,
           long_click: kb_func,
@@ -3497,28 +3505,28 @@ preset_keyboards:
       - conf/main
     keys:
       # 第 1 行
-      - { click: liquid_keyboard_clipboard, width: 16, long_click: cut } 
+      - { click: liquid_keyboard_clipboard, width: 16, long_click: cut, key_back_color: off_key_back_color, __include: styl/key } 
       - { click: split_word, long_click: '1', width: 22, __include: styl/key } 
       - { click: '9keyabc', long_click: '2', width: 22, __include: styl/key }
       - { click: '9keydef', long_click: '3', width: 22, __include: styl/key }
-      - { click: BS, width: 18 }
+      - { click: BS, width: 18, key_back_color: off_key_back_color,  __include: styl/key }
       # 第 2 行
-      - { click: '，', long_click: '、', width: 16, key_back_color: off_key_back_color }
+      - { click: '，', long_click: '、', width: 16, key_back_color: off_key_back_color, __include: styl/key }
       - { click: '9keyghi', long_click: '4', width: 22, __include: styl/key }
       - { click: '9keyjkl', long_click: '5', width: 22, __include: styl/key }
       - { click: '9keymno', long_click: '6', width: 22, __include: styl/key }
-      - { click: 'Escape1', long_click: copy, width: 18, key_back_color: off_key_back_color }
+      - { click: 'Escape1', long_click: copy, width: 18, key_back_color: off_key_back_color, __include: styl/key }
       # 第 3 行
-      - { click: '。', long_click: '？', width: 16, key_back_color: off_key_back_color }
+      - { click: '。', long_click: '？', width: 16, key_back_color: off_key_back_color, __include: styl/key }
       - { click: '9keypqrs', long_click: '7', width: 22, __include: styl/key }
       - { click: '9keytuv', long_click: '8', width: 22, __include: styl/key }
       - { click: '9keywxyz', long_click: '9', width: 22, __include: styl/key }
-      - { click: '0', long_click: paste, width: 18, key_back_color: off_key_back_color }
+      - { click: '0', long_click: paste, width: 18, key_back_color: off_key_back_color, __include: styl/key }
       # 第 4 行
-      - { click: 9Keyboard_symbols, long_click: Color_switch, composing: Tab, width: 16, __include: styl/off_key }   
-      - { click: 9Keyboard_number, composing: xiegang, width: 16, __include: styl/off_key, __patch: conf/key_height_last } 
+      - { click: 9Keyboard_symbols, long_click: Color_switch, composing: Tab, width: 16, key_back_color: off_key_back_color, __include: styl/key }   
+      - { click: 9Keyboard_number, long_click: Menu, composing: xiegang, width: 16, key_back_color: off_key_back_color, __include: styl/key, __patch: conf/key_height_last } 
       - { click: space, swipe_up: Clear, swipe_down: liquid_keyboard_clipboard, key_symbol_offset_x: 0, width: 34, key_back_color: space_back_color, hilited_key_back_color: hilited_space_back_color } 
-      - { click: 'Keyboard_letter_9jian', composing: "CommitScriptText", width: 16, __include: styl/off_key }    
+      - { click: 'Keyboard_letter_9jian', composing: "CommitScriptText", width: 16, key_back_color: off_key_back_color, __include: styl/key }    
       - {
           click: Return,
           long_click: kb_func,

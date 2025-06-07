@@ -241,6 +241,28 @@ function M.func(input, env)
                    yield(cand)
                end
             end
+        elseif context:get_option("tigress") and not context:get_option("tiger") and not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") then
+            if utf8.len(env.engine.context.input) == 4 and #tigress_candidates == 1 then
+                env.engine:commit_text(tigress_candidates[1].text)
+                context:clear()
+            elseif utf8.len(env.engine.context.input) >= 4 and #tigress_candidates == 0 and #fc_candidates == 0 and #kfxg_candidates == 0 and #digit_candidates == 0 then
+                context:clear()
+            else
+               for _, cand in ipairs(tigress_candidates) do
+                   yield(cand)
+               end
+            end
+        elseif context:get_option("tiger") and context:get_option("tigress") and not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") then
+            if utf8.len(env.engine.context.input) == 4 and #tiger_tigress == 1 then
+                env.engine:commit_text(tiger_tigress[1].text)
+                context:clear()
+            elseif utf8.len(env.engine.context.input) >= 4 and #tiger_tigress == 0 and #fc_candidates == 0 and #kfxg_candidates == 0 and #digit_candidates == 0 then
+                context:clear()
+            else
+               for _, cand in ipairs(tiger_tigress) do
+                   yield(cand)
+               end
+            end
         elseif context:get_option("tiger") and context:get_option("tigress") then
             for _, cand in ipairs(tiger_tigress) do
                 yield(cand)

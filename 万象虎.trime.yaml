@@ -3636,7 +3636,11 @@ preset_keyboards:
       - conf/main_en
     keys:
       # 数字行
-      - {click: num1, __include: styl/key,}
+      - {
+          click: num1, 
+          height: 40,
+          __include: styl/key,
+        }     
       - {click: num2, __include: styl/key,}
       - {click: num3, __include: styl/key,}
       - {click: num4, __include: styl/key,}

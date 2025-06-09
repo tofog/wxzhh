@@ -86,7 +86,7 @@ engine:
     - chord_composer                       #并击处理器，与置顶参数：是否启用并击，选项配合使用
     #- lua_processor@*select_character     #以词定字，默认左中括号上屏一个词的前一个字，右中括号上屏一个词的后一个字
     - lua_processor@*temporary_tiger*P    #临时虎码4码简词
-    - lua_processor@*tiger_sequence*P     #手动排序，高亮候选 ctrl+j左移动 ctrl+k 右移动 ctrl+0 移除位移
+    - lua_processor@*cand_sequence*P      #手动排序，高亮候选 ctrl+j左移动 ctrl+k 右移动 ctrl+0 移除位移
     - lua_processor@*tone_fallback         #声调辅助回退，当你输入声调数字错误时，继续输入正确的而不用回退删除
     - lua_processor@*quick_symbol_text2   #快符引导以及重复上屏，配合quick_symbol_text顶层配置清单定义扩展按键
     - lua_processor@*super_tips*S          #超级提示模块：表情、简码、翻译、化学式、等等靠你想象
@@ -141,7 +141,7 @@ engine:
     - lua_filter@*super_tips*M                      #超级提示模块：表情、简码、翻译、化学式、等等靠你想象
     - lua_filter@*remove_tiger_filter              #虎码开关滤镜
     - lua_filter@*temporary_tiger*F                #临时虎码4码简词
-    - lua_filter@*tiger_sequence*F                 #手动排序，高亮候选 ctrl+j左移动 ctrl+k 右移动 ctrl+0 移除位移 
+    - lua_filter@*cand_sequence*F                  #手动排序，高亮候选 ctrl+j左移动 ctrl+k 右移动 ctrl+0 移除位移 
     - simplifier@chinese_english                    #中英翻译
     - simplifier@pinyin                            #拼音滤镜 
     - simplifier@chaifen                           #拆分滤镜

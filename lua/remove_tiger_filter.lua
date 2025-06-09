@@ -1,4 +1,3 @@
-
 local M = {}
 
 -- 获取辅助码
@@ -20,6 +19,42 @@ function M.run_fuzhu(cand, initial_comment)
 
     return full_fuzhu_list, first_fuzhu_list
 end
+
+-- 第一套候选词映射（虎单模式）
+local letter_map_tiger = {
+    q = "都", w = "得", e = "也", r = "了", t = "我", y = "到", u = "的", i = "为", o = "是", p = "行",
+    a = "来", s = "说", d = "中", f = "一", g = "就", h = "道", j = "人", k = "能", l = "而", 
+    z = "可", x = "和", c = "不", v = "要", b = "如", n = "在", m = "大"
+}
+
+-- 第二套候选词映射（虎词模式）
+local letter_map_tigress = {
+    q = "特别", w = "怎么", e = "突然", r = "因为", t = "我们", y = "当然", u = "工作", i = "为什么", o = "自己", p = "起来",
+    a = "那个", s = "出来", d = "哪个", f = "开始", g = "地方", h = "孩子", j = "什么", k = "没有", l = "而且", 
+    z = "可以", x = "应该", c = "不是", v = "这个", b = "如果", n = "现在", m = "所以"
+}
+
+-- 新增：候选词生成函数
+function M.generate_single_tiger(env, input_char)
+    local context = env.engine.context
+    local cand_text = letter_map_tiger[input_char] or ""
+    if cand_text == "" then return end
+    
+    -- 创建候选词对象
+    local cand = Candidate("manual", 0, utf8.len(context.input), cand_text, "")
+    return cand
+end
+
+function M.generate_single_tigress(env, input_char)
+    local context = env.engine.context
+    local cand_text = letter_map_tigress[input_char] or ""
+    if cand_text == "" then return end
+    
+    -- 创建候选词对象
+    local cand = Candidate("manual", 0, utf8.len(context.input), cand_text, "")
+    return cand
+end
+
 -- 初始化
 function M.init(env)
     local config = env.engine.schema.config
@@ -227,41 +262,119 @@ function M.func(input, env)
         
         
         -- 🐯 虎单开关与虎词开关
-        if context:get_option("tiger") and not context:get_option("tigress") and not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") then
-            if utf8.len(env.engine.context.input) == 4 and #tiger_candidates == 1 then
-                env.engine:commit_text(tiger_candidates[1].text)
-                context:clear()
-            elseif utf8.len(env.engine.context.input) >= 4 and #tiger_candidates == 0 and #fc_candidates == 0 and #kfxg_candidates == 0 and #digit_candidates == 0 then
-                context:clear()
-            else
-               for _, cand in ipairs(tiger_candidates) do
-                   yield(cand)
-               end
-               for _, cand in ipairs(onekf) do
-                   yield(cand)
-               end
-            end
-        elseif context:get_option("tigress") and not context:get_option("tiger") and not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") then
-            if utf8.len(env.engine.context.input) == 4 and #tigress_candidates == 1 then
-                env.engine:commit_text(tigress_candidates[1].text)
-                context:clear()
-            elseif utf8.len(env.engine.context.input) >= 4 and #tigress_candidates == 0 and #fc_candidates == 0 and #kfxg_candidates == 0 and #digit_candidates == 0 then
-                context:clear()
-            else
-               for _, cand in ipairs(tigress_candidates) do
-                   yield(cand)
-               end
-            end
-        elseif context:get_option("tiger") and context:get_option("tigress") and not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") then
-            if utf8.len(env.engine.context.input) == 4 and #tiger_tigress == 1 then
-                env.engine:commit_text(tiger_tigress[1].text)
-                context:clear()
-            elseif utf8.len(env.engine.context.input) >= 4 and #tiger_tigress == 0 and #fc_candidates == 0 and #kfxg_candidates == 0 and #digit_candidates == 0 then
-                context:clear()
-            else
-               for _, cand in ipairs(tiger_tigress) do
-                   yield(cand)
-               end
+        local new_candidates = {} 
+        if not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") and not env.is_radical_mode and #kfxg_candidates == 0 and #digit_candidates == 0 then
+            if context:get_option("tiger") and context:get_option("tigress") then
+                if utf8.len(env.engine.context.input) < 4 then
+                   for _, cand in ipairs(tiger_tigress) do
+                       yield(cand)
+                   end
+                elseif utf8.len(env.engine.context.input) == 4 and #tiger_tigress == 1 then
+                    env.engine:commit_text(tiger_tigress[1].text)
+                    context:clear()
+                elseif utf8.len(env.engine.context.input) == 4 and #tiger_tigress == 0 and #punctuation_candidates ~= 0 then                
+                elseif utf8.len(env.engine.context.input) == 4 and #tiger_tigress == 0 then                
+                    context:clear()                      
+                else
+                   if utf8.len(env.engine.context.input) == 4 then
+                      for _, cand in ipairs(tiger_tigress) do         
+                          yield(cand)       
+                      end                    
+                 local previous = tiger_tigress[1].text            
+                 tiger_four = previous
+                                         
+                   elseif utf8.len(env.engine.context.input) == 5 then
+                       env.engine:commit_text(tiger_four) 
+                 tiger_four = ""
+                       local last_input = env.engine.context.input:sub(-1)     
+                       
+                       -- 虎单候选词生成 (位置1)
+                       local manual_cand = M.generate_single_tiger(env, last_input)
+                       if manual_cand then
+                           yield(manual_cand)
+                       end
+                       -- 虎词候选词生成 (位置1)
+                       local manual_cand = M.generate_single_tigress(env, last_input)
+                       if manual_cand then
+                           yield(manual_cand)
+                       end
+                       env.engine.context.input = last_input
+                   else
+                   end          
+                end                 
+            elseif context:get_option("tiger") then
+                if utf8.len(env.engine.context.input) < 4 then       
+                   for _, cand in ipairs(tiger_candidates) do
+                       yield(cand)
+                   end
+                   for _, cand in ipairs(onekf) do
+                       yield(cand)
+                   end     
+                elseif utf8.len(env.engine.context.input) == 4 and #tiger_candidates == 1 then
+                    env.engine:commit_text(tiger_candidates[1].text)
+                    context:clear()        
+                elseif utf8.len(env.engine.context.input) == 4 and #tiger_candidates == 0 and #punctuation_candidates ~= 0 then
+                elseif utf8.len(env.engine.context.input) == 4 and #tiger_candidates == 0 then
+                    context:clear()                        
+                else
+                   if utf8.len(env.engine.context.input) == 4 then
+                      for _, cand in ipairs(tiger_candidates) do         
+                          yield(cand)       
+                      end                    
+                   
+                 local previous = tiger_candidates[1].text                
+                 tiger_four = previous
+                                         
+                   elseif utf8.len(env.engine.context.input) == 5 then
+                       env.engine:commit_text(tiger_four) 
+                 tiger_four = ""
+                       local last_input = env.engine.context.input:sub(-1)             
+                       
+                       -- 虎单候选词生成 (位置2)
+                       local manual_cand = M.generate_single_tiger(env, last_input)
+                       if manual_cand then
+                           yield(manual_cand)
+                       end
+                       env.engine.context.input = last_input
+                   else
+                   end          
+                end                 
+
+            elseif context:get_option("tigress") then
+                if utf8.len(env.engine.context.input) < 4 then        
+                   for _, cand in ipairs(tigress_candidates) do
+                       yield(cand)
+                   end
+                elseif utf8.len(env.engine.context.input) == 4 and #tigress_candidates == 1 then
+                    env.engine:commit_text(tigress_candidates[1].text)
+                    context:clear()  
+                elseif utf8.len(env.engine.context.input) == 4 and #tigress_candidates == 0 and #punctuation_candidates ~= 0 then                 
+                elseif utf8.len(env.engine.context.input) == 4 and #tigress_candidates == 0 then                 
+                    context:clear()                               
+                else
+                   if utf8.len(env.engine.context.input) == 4 then
+                      for _, cand in ipairs(tigress_candidates) do         
+                          yield(cand)       
+                      end                    
+                      
+                 local previous = tigress_candidates[1].text               
+                 tiger_four = previous
+                                         
+                   elseif utf8.len(env.engine.context.input) == 5 then
+                       env.engine:commit_text(tiger_four) 
+                 tiger_four = ""
+                       local last_input = env.engine.context.input:sub(-1)             
+                       
+                       -- 虎词候选词生成 (位置3)
+                       local manual_cand = M.generate_single_tigress(env, last_input)
+                       if manual_cand then
+                           yield(manual_cand)
+                       end
+                       env.engine.context.input = last_input
+                   else
+                   end          
+                end 
+            else                
             end
         elseif context:get_option("tiger") and context:get_option("tigress") then
             for _, cand in ipairs(tiger_tigress) do

@@ -95,8 +95,8 @@ function M.func(input, env)
     -- 候选词存储
     local candidates = {}       -- 全部候选词
     local fc_candidates = {}    -- 反查候选词
-    local kfxg_candidates = {}    -- 包含斜杠的候选词
-    local kffh_candidates = {}    -- 包含分号的候选词
+    local qz_candidates = {}    -- 前缀候选词
+    local sj_candidates = {}    -- 时间候选词
     local digit_candidates = {}  -- 包含数字但不包含字母的候选词
     local alnum_candidates = {}  -- 包含字母的候选词
     local punctuation_candidates = {}  -- 只包含指定标点符号的候选词
@@ -121,10 +121,10 @@ function M.func(input, env)
         ) or false
         if env.is_radical_mode then
             table.insert(fc_candidates, cand)
-        elseif input_preedit:find("/") then
-            table.insert(kfxg_candidates, cand)
-        elseif input_preedit:find(";") then
-            table.insert(kffh_candidates, cand)
+        elseif input_preedit:find("^[VRNU/;]") then
+            table.insert(qz_candidates, cand)
+        elseif cand.type == "time" or cand.type == "date" or cand.type == "day_summary" or cand.type == "xq" or cand.type == "oww" or cand.type == "ojq" or cand.type == "holiday_summary" or cand.type == "birthday_reminders" then
+            table.insert(sj_candidates, cand)
         elseif contains_digit_no_alpha(text) then
             table.insert(digit_candidates, cand)
         elseif contains_alpha(text) then
@@ -140,26 +140,26 @@ function M.func(input, env)
         end
     end
 
-    -- 输出包含数字但不包含字母的候选词
-    for _, cand in ipairs(digit_candidates) do
-        yield(cand)
-    end
-
     -- 反查候选词
     for _, cand in ipairs(fc_candidates) do
         yield(cand)
     end
     
-    -- 包含斜杠的候选词
-    for _, cand in ipairs(kfxg_candidates) do
+    -- 前缀候选词
+    for _, cand in ipairs(qz_candidates) do
         yield(cand)
     end
     
-    -- 包含分号的候选词
-    for _, cand in ipairs(kffh_candidates) do
+    -- 时间候选词
+    for _, cand in ipairs(sj_candidates) do
         yield(cand)
     end
-
+    
+    -- 输出包含数字但不包含字母的候选词
+    for _, cand in ipairs(digit_candidates) do
+        yield(cand)
+    end
+    
     local tiger_tigress = {}    -- 虎单与虎词
     local other_tigress = {}
     local useless_candidates = {}
@@ -263,7 +263,7 @@ function M.func(input, env)
         
         -- 🐯 虎单开关与虎词开关
         local new_candidates = {} 
-        if not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") and not env.is_radical_mode and #kfxg_candidates == 0 and #digit_candidates == 0 then
+        if not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") and not env.is_radical_mode and #qz_candidates == 0 and #sj_candidates == 0 then
             if context:get_option("tiger") and context:get_option("tigress") then
                 if utf8.len(env.engine.context.input) < 4 then
                    for _, cand in ipairs(tiger_tigress) do

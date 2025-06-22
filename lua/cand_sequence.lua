@@ -1,9 +1,7 @@
---万象拼音方案新成员，手动自由排序
+
 --一个基于快捷键计数偏移量来手动调整排序的工具
---这个版本是db数据库支持的版本,可能会支持更多的排序记录,作为一个备用版本留存
---ctrl+j左移 ctrl+k左移  ctrl+0移除排序信息,固定词典其实没必要删除,直接降权到后面
---排序算法可能还不完美,有能力的朋友欢迎帮忙变更算法
--- 序列化并写入文件的函数
+--ctrl+j左移 ctrl+k左移  ctrl+0移除排序信息
+
 function write_word_to_file(env, record_type)
     local filename = rime_api.get_user_data_dir() .. "/lua/seq_words.lua"
     if not filename then

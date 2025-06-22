@@ -12,6 +12,30 @@ local punctuation = {                   -- 需过滤的标点符号
     ["？"] = true, ["："] = true, ["！"] = true
 }
 
+-- 加载永久自造词表
+function load_permanent_user_words()
+    local filename = rime_api.get_user_data_dir() .. "/lua/user_words.lua"
+    local f, err = loadfile(filename)
+    if f then
+        return f() or {}
+    else
+        return {}
+    end
+end
+
+-- 反转词表：{词 => 码} 转换为 {码 => [词1, 词2]}
+function reverse_seq_words(user_words)
+    local new_dict = {}
+    for word, code in pairs(user_words) do
+        if not new_dict[code] then
+            new_dict[code] = {word}
+        else
+            table.insert(new_dict[code], word)
+        end
+    end
+    return new_dict
+end
+
 -- 标点过滤函数
 local function filter_punctuation(text)
     local result = ""
@@ -57,83 +81,125 @@ function get_tiger_code(word)
     end
 end
 
--- 历史记录管理核心函数
-function update_history(commit_text)
-    commit_text = filter_punctuation(commit_text)
-    if commit_text == "" or utf8.len(commit_text) < 2 then
-        return
+-- 写入永久自造词到文件
+function write_permanent_word_to_file(env, word, code)
+    -- 添加到内存表
+    env.permanent_user_words[word] = code
+    
+    -- 序列化并写入文件
+    local filename = rime_api.get_user_data_dir() .. "/lua/user_words.lua"
+    local serialize_str = ""
+    for w, c in pairs(env.permanent_user_words) do
+        serialize_str = serialize_str .. string.format('    ["%s"] = "%s",\n', w, c)
     end
+    
+    local record = "local user_words = {\n" .. serialize_str .. "}\nreturn user_words"
+    local fd = assert(io.open(filename, "w"))
+    fd:setvbuf("line")
+    fd:write(record)
+    fd:close()
+    
+    -- 更新反转表
+    env.permanent_seq_words_dict = reverse_seq_words(env.permanent_user_words)
+end
 
-    -- 删除已有记录
-    if global_commit_dict[commit_text] then
-        local old_code = global_commit_dict[commit_text]
-        
-        -- 从编码映射中移除
-        if global_seq_words_dict[old_code] then
-            for i, text in ipairs(global_seq_words_dict[old_code]) do
+-- 历史记录管理核心函数（重构为env方法）
+local function make_update_history(env)
+    return function(commit_text)
+        commit_text = filter_punctuation(commit_text)
+        if commit_text == "" or utf8.len(commit_text) < 2 then
+            return
+        end
+
+        -- 在更新前检测是否存在
+        local is_repeated = (global_commit_dict[commit_text] ~= nil)
+
+        -- 生成新编码
+        local code = get_tiger_code(commit_text)
+        if code == "" then return end
+
+        -- 永久化逻辑（在历史记录更新前）
+        if is_repeated then
+            if not env.permanent_user_words[commit_text] then
+                write_permanent_word_to_file(env, commit_text, code)
+            end
+        end
+
+        -- 删除已有记录
+        if global_commit_dict[commit_text] then
+            local old_code = global_commit_dict[commit_text]
+            
+            -- 从编码映射中移除
+            if global_seq_words_dict[old_code] then
+                for i, text in ipairs(global_seq_words_dict[old_code]) do
+                    if text == commit_text then
+                        table.remove(global_seq_words_dict[old_code], i)
+                        break
+                    end
+                end
+                if #global_seq_words_dict[old_code] == 0 then
+                    global_seq_words_dict[old_code] = nil
+                end
+            end
+            
+            -- 从历史队列中移除
+            for i, text in ipairs(global_commit_history) do
                 if text == commit_text then
-                    table.remove(global_seq_words_dict[old_code], i)
+                    table.remove(global_commit_history, i)
                     break
                 end
             end
-            if #global_seq_words_dict[old_code] == 0 then
-                global_seq_words_dict[old_code] = nil
-            end
+            global_commit_dict[commit_text] = nil
         end
         
-        -- 从历史队列中移除
-        for i, text in ipairs(global_commit_history) do
-            if text == commit_text then
-                table.remove(global_commit_history, i)
-                break
-            end
-        end
-        global_commit_dict[commit_text] = nil
-    end
-
-    -- 生成新编码
-    local code = get_tiger_code(commit_text)
-    if code == "" then return end
-    
-    -- 添加新记录
-    table.insert(global_commit_history, commit_text)
-    global_commit_dict[commit_text] = code
-    
-    if not global_seq_words_dict[code] then
-        global_seq_words_dict[code] = {}
-    end
-    table.insert(global_seq_words_dict[code], commit_text)
-    
-    -- 清理最早记录（队列超过容量时）
-    if #global_commit_history > global_max_history_size then
-        local removed_text = table.remove(global_commit_history, 1)
-        local removed_code = global_commit_dict[removed_text]
+        -- 添加新记录
+        table.insert(global_commit_history, commit_text)
+        global_commit_dict[commit_text] = code
         
-        if removed_code and global_seq_words_dict[removed_code] then
-            for i, text in ipairs(global_seq_words_dict[removed_code]) do
-                if text == removed_text then
-                    table.remove(global_seq_words_dict[removed_code], i)
-                    break
+        if not global_seq_words_dict[code] then
+            global_seq_words_dict[code] = {}
+        end
+        table.insert(global_seq_words_dict[code], commit_text)
+        
+        -- 清理最早记录
+        if #global_commit_history > global_max_history_size then
+            local removed_text = table.remove(global_commit_history, 1)
+            local removed_code = global_commit_dict[removed_text]
+            
+            if removed_code and global_seq_words_dict[removed_code] then
+                for i, text in ipairs(global_seq_words_dict[removed_code]) do
+                    if text == removed_text then
+                        table.remove(global_seq_words_dict[removed_code], i)
+                        break
+                    end
+                end
+                if #global_seq_words_dict[removed_code] == 0 then
+                    global_seq_words_dict[removed_code] = nil
                 end
             end
-            if #global_seq_words_dict[removed_code] == 0 then
-                global_seq_words_dict[removed_code] = nil
-            end
+            global_commit_dict[removed_text] = nil
         end
-        global_commit_dict[removed_text] = nil
     end
 end
 
 -- 输入法处理器模块
 local P = {}
 function P.init(env)
+    -- 加载永久自造词表
+    env.permanent_user_words = load_permanent_user_words()
+    env.permanent_seq_words_dict = reverse_seq_words(env.permanent_user_words)
+    
+    -- 创建带env闭包的历史更新函数
+    env.update_history = make_update_history(env)
+    
     env.engine.context.commit_notifier:connect(function(ctx)
-        update_history(ctx:get_commit_text())
+        env.update_history(ctx:get_commit_text())
     end)
 end
+
 function P.func() return 2 end  -- 保留空实现
 
--- 候选词生成模块
+-- 候选词生成模块（统一插入逻辑）
 local F = {}
 function F.func(input, env)
     local context = env.engine.context
@@ -142,7 +208,13 @@ function F.func(input, env)
     local start_pos, end_pos
     local has_original_candidates = false
 
-    -- 收集原始候选词并标记是否存在
+    -- 确保永久词表已初始化
+    if env.permanent_seq_words_dict == nil then
+        env.permanent_user_words = load_permanent_user_words()
+        env.permanent_seq_words_dict = reverse_seq_words(env.permanent_user_words)
+    end
+
+    -- 收集原始候选词
     for cand in input:iter() do
         if not start_pos then
             start_pos = cand.start
@@ -158,23 +230,46 @@ function F.func(input, env)
         end_pos = string.len(input_code)
     end
 
-    -- 添加历史记录候选（智能插入第二位或作为唯一候选）
+    -- 合并永久和临时自造词（永久在前，临时在后）
+    local combined_words = {}
+    local combined_count = 0
+    
+    -- 先添加永久自造词
+    if env.permanent_seq_words_dict[input_code] then
+        for _, word in ipairs(env.permanent_seq_words_dict[input_code]) do
+            combined_count = combined_count + 1
+            combined_words[combined_count] = {text = word, type = "permanent"}
+        end
+    end
+    
+    -- 再添加临时自造词
     if global_seq_words_dict[input_code] then
+        for i = #global_seq_words_dict[input_code], 1, -1 do
+            local word = global_seq_words_dict[input_code][i]
+            combined_count = combined_count + 1
+            combined_words[combined_count] = {text = word, type = "history"}
+        end
+    end
+
+    -- 统一插入逻辑
+    if combined_count > 0 then
         if has_original_candidates then
-            -- 有原始候选词时，按从新到旧顺序插入到第二个位置
+            -- 有原始候选时，从第二位开始插入
             local insert_position = 2
-            for i = #global_seq_words_dict[input_code], 1, -1 do
-                local text = global_seq_words_dict[input_code][i]
-                local cand = Candidate("history", start_pos, end_pos, text, "⭐")
-                table.insert(new_candidates, insert_position, cand)
+            for i = 1, combined_count do
+                local cand = combined_words[i]
+                local comment = (cand.type == "permanent") and "*" or "⭐"
+                local new_cand = Candidate(cand.type, start_pos, end_pos, cand.text, comment)
+                table.insert(new_candidates, insert_position, new_cand)
                 insert_position = insert_position + 1
             end
         else
-            -- 无原始候选词时，按从新到旧顺序直接添加
-            for i = #global_seq_words_dict[input_code], 1, -1 do
-                local text = global_seq_words_dict[input_code][i]
-                local cand = Candidate("history", start_pos, end_pos, text, "⭐")
-                table.insert(new_candidates, cand)
+            -- 无原始候选时，直接添加
+            for i = 1, combined_count do
+                local cand = combined_words[i]
+                local comment = (cand.type == "permanent") and "*" or "⭐"
+                local new_cand = Candidate(cand.type, start_pos, end_pos, cand.text, comment)
+                table.insert(new_candidates, new_cand)
             end
         end
     end

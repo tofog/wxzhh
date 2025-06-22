@@ -3206,17 +3206,19 @@ preset_keyboards:
       - {
           click: num1, 
           height: 40,
+          long_click: '-',
+          key_back_color: off_key_back_color,
           __include: styl/key,
         }     
-      - {click: num2,  __include: styl/key }
-      - {click: num3,  __include: styl/key }
-      - {click: num4,  __include: styl/key }
-      - {click: num5,  __include: styl/key }
-      - {click: num6,  __include: styl/key }
-      - {click: num7,  __include: styl/key }
-      - {click: num8,  __include: styl/key }
-      - {click: num9,  __include: styl/key }
-      - {click: num0,  __include: styl/key }
+      - {click: num2, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num3, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num4, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num5, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num6, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num7, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num8, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num9, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num0, key_back_color: off_key_back_color, long_click: '+',  __include: styl/key }
       # 第 1 行
       - { click: 'q', long_click: '!',  __include: styl/key }
       - { click: 'w', long_click: '@',  __include: styl/key }
@@ -3372,17 +3374,18 @@ preset_keyboards:
       - {
           click: num1, 
           height: 40,
+          key_back_color: off_key_back_color,
           __include: styl/key,
         }     
-      - {click: num2,  __include: styl/key }
-      - {click: num3,  __include: styl/key }
-      - {click: num4,  __include: styl/key }
-      - {click: num5,  __include: styl/key }
-      - {click: num6,  __include: styl/key }
-      - {click: num7,  __include: styl/key }
-      - {click: num8,  __include: styl/key }
-      - {click: num9,  __include: styl/key }
-      - {click: num0,  __include: styl/key }
+      - {click: num2, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num3, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num4, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num5, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num6, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num7, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num8, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num9, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num0, key_back_color: off_key_back_color,  __include: styl/key }
       # 第 1 行
       - { click: '18keyq', long_click: '!', swipe_down: 'fanxiegang', hint: '\', width: 14.3, __include: styl/key }
       - { click: '18keywe', long_click: '@', swipe_down: "{", hint: "{", width: 14.3, __include: styl/key }
@@ -3443,17 +3446,18 @@ preset_keyboards:
       - {
           click: num1, 
           height: 40,
+          key_back_color: off_key_back_color,
           __include: styl/key,
         }     
-      - {click: num2,  __include: styl/key }
-      - {click: num3,  __include: styl/key }
-      - {click: num4,  __include: styl/key }
-      - {click: num5,  __include: styl/key }
-      - {click: num6,  __include: styl/key }
-      - {click: num7,  __include: styl/key }
-      - {click: num8,  __include: styl/key }
-      - {click: num9,  __include: styl/key }
-      - {click: num0,  __include: styl/key }
+      - {click: num2, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num3, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num4, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num5, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num6, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num7, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num8, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num9, key_back_color: off_key_back_color,  __include: styl/key }
+      - {click: num0, key_back_color: off_key_back_color,  __include: styl/key }
       # 第 1 行
       - { click: '14keyqw', long_click: '!', swipe_down: '\', hint: '\', width: 20, __include: styl/key }
       - { click: '14keyer', long_click: '@', swipe_down: "{", hint: "{", width: 20, __include: styl/key }
@@ -3639,17 +3643,18 @@ preset_keyboards:
       - {
           click: num1, 
           height: 40,
+          key_back_color: off_key_back_color,
           __include: styl/key,
         }     
-      - {click: num2, __include: styl/key,}
-      - {click: num3, __include: styl/key,}
-      - {click: num4, __include: styl/key,}
-      - {click: num5, __include: styl/key,}
-      - {click: num6, __include: styl/key,}
-      - {click: num7, __include: styl/key,}
-      - {click: num8, __include: styl/key,}
-      - {click: num9, __include: styl/key,}
-      - {click: num0, __include: styl/key,}
+      - {click: num2, key_back_color: off_key_back_color, __include: styl/key,}
+      - {click: num3, key_back_color: off_key_back_color, __include: styl/key,}
+      - {click: num4, key_back_color: off_key_back_color, __include: styl/key,}
+      - {click: num5, key_back_color: off_key_back_color, __include: styl/key,}
+      - {click: num6, key_back_color: off_key_back_color, __include: styl/key,}
+      - {click: num7, key_back_color: off_key_back_color, __include: styl/key,}
+      - {click: num8, key_back_color: off_key_back_color, __include: styl/key,}
+      - {click: num9, key_back_color: off_key_back_color, __include: styl/key,}
+      - {click: num0, key_back_color: off_key_back_color, __include: styl/key,}
       # 第 1 行
       - { click: 'q', long_click: '!', __include: styl/key }
       - { click: 'w', long_click: '@', __include: styl/key }

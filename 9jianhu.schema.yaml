@@ -79,8 +79,8 @@ engine:
     - lua_filter@*super_tips*M                      #超级提示模块：表情、简码、翻译、化学式、等等靠你想象
     - lua_filter@*temporary_tiger*F                #临时虎码4码简词
     - simplifier@chinese_english                    #中英翻译
+    - lua_filter@*tiger_chaifen                    #拆分滤镜
     - simplifier@pinyin                            #拼音滤镜 
-    - simplifier@chaifen                           #拆分滤镜
     - lua_filter@*unicode_display                  #Unicode编码显示
     - uniquifier                                    # 去重
 
@@ -192,6 +192,8 @@ recognizer:
 #从 default 继承快捷键
 key_binder:
   import_preset: default  # 从 default.yaml 继承通用的
+  # Lua 配置: shijian.lua 的引导符，涉及：日期、时间、节日、节气、生日、问候模板等功能
+  shijian_keys: ["/", "o"]
   # Lua 配置: 超级tips上屏按键
   tips_key: "slash"   #修改时候去default找
   search: "`"             # 辅码引导符，要添加到 speller/alphabet
@@ -377,14 +379,6 @@ octagram:
     translator/max_homophones: 5
     translator/max_homographs: 5
     
-
-# 拆分滤镜
-chaifen:
-  opencc_config: hu_cf.json
-  option_name: chaifen
-  show_in_comment: true 
-  tips: all #如只想给单字加滤镜，可改为 char
-
 
 # ↓拼音滤镜
 pinyin:

@@ -93,6 +93,7 @@ engine:
     - lua_translator@*unicode              #通过输入大写U引导，并输入Unicode编码获得汉字输出
     - lua_translator@*number_translator    #数字、金额大写，通过输入大写R1234获得候选输出
     - lua_translator@*super_calculator     #超级计算器，Lua内查看高级用法
+    - lua_translator@*input_statistics     #一个输入统计的脚本，以日、周、月、年等维度的统计
     - table_translator@wanxiang_en         #挂接英文输入，参与中英混输
     - table_translator@cn_en               #中英混合词汇表导入
     - script_translator@tiger_user_dict   #虎码自造词之使用词汇入口
@@ -115,9 +116,9 @@ engine:
     - lua_filter@*temporary_tiger*F                #临时虎码4码简词
     - lua_filter@*cand_sequence*F                  #手动排序，高亮候选 ctrl+j左移动 ctrl+k 右移动 ctrl+0 移除位移 
     - simplifier@chinese_english                    #中英翻译
-    - simplifier@pinyin                            #拼音滤镜 
-    - simplifier@chaifen                           #拆分滤镜
     - lua_filter@*super_comment                     #超级注释模块，支持错词提示、辅助码显示，部件组字读音注释，支持个性化配置和关闭相应的功能，详情搜索super_comment进行详细配置
+    - lua_filter@*tiger_chaifen                    #拆分滤镜
+    - simplifier@pinyin                            #拼音滤镜 
     - lua_filter@*unicode_display                  #Unicode编码显示
     - uniquifier                                    # 去重
     
@@ -285,6 +286,8 @@ recognizer:
 #从 default 继承快捷键
 key_binder:
   import_preset: default  # 从 default.yaml 继承通用的
+  # Lua 配置: shijian.lua 的引导符，涉及：日期、时间、节日、节气、生日、问候模板等功能
+  shijian_keys: ["/", "o"]
   # Lua 配置: 超级tips上屏按键
   tips_key: "slash"   #修改时候去default找
   search: "`"             # 辅码引导符，要添加到 speller/alphabet
@@ -481,13 +484,6 @@ set_chord_composer:
         - xform=。="""".=
         - xform=！=""""!=
         - xform=？=""""?=
-
-# 拆分滤镜
-chaifen:
-  opencc_config: hu_cf.json
-  option_name: chaifen
-  show_in_comment: true 
-  tips: all #如只想给单字加滤镜，可改为 char
 
 
 # ↓拼音滤镜

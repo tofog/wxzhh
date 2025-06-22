@@ -82,6 +82,7 @@ engine:
     - lua_filter@*tiger_chaifen                    #拆分滤镜
     - simplifier@pinyin                            #拼音滤镜 
     - lua_filter@*unicode_display                  #Unicode编码显示
+    - lua_filter@*text_formatting                   #给自定义用户词扩展一个换行:\n, 制表符：\t, 回车符：\r, 空格：\s
     - uniquifier                                    # 去重
 
 predictor:
@@ -200,12 +201,12 @@ key_binder:
   bindings:             # 也可以再增加方案专有的
     #- { when: composing, accept: Tab, send: '[' } ## 取消注释后：tab引导辅助码
     - { when: composing, accept: Control+w, send: Control+BackSpace }
-#分号用于次选
+#分号用于次选，微软、搜狗双拼不可启用
     - { when: has_menu, accept: semicolon, send: 2 }
-# 引号用于三选
-#    - { when: has_menu, accept: apostrophe, send: 3 } 
 #使用Control+e进入翻译模式
     - { when: has_menu, accept: "Control+e", toggle: chinese_english }
+#使用快捷键Control+c拆分显示
+    - { when: has_menu, accept: "Control+c", toggle: chaifen_switch }
 #通过快捷键Control+t开启超级tips
     - { when: has_menu, accept: "Control+t", toggle: super_tips }
 #通过快捷键Control+g开启字符集过滤
@@ -223,9 +224,27 @@ key_binder:
     - { when: composing, accept: Control+5, send_sequence: '{Home}{Shift+Right}{Shift+Right}{Shift+Right}{Shift+Right}{Shift+Right}' }
     - { when: composing, accept: Control+6, send_sequence: '{Home}{Shift+Right}{Shift+Right}{Shift+Right}{Shift+Right}{Shift+Right}{Shift+Right}' }
     - { when: composing, accept: Control+7, send_sequence: '{Home}{Shift+Right}{Shift+Right}{Shift+Right}{Shift+Right}{Shift+Right}{Shift+Right}{Shift+Right}' }
+#当输入编码后发现没有词，则通过双击``进入造词模式而且不需要删除编码，这个功能与``直接引导相呼应相配合
+    - { match: "^.*`$", accept: "`", send_sequence: '{BackSpace}{Home}{`}{`}{End}' }
 #通过按下/发送/+1节约一个按键，不冲突的时候可以开启
     #- { match: "[a-z]{1,4}", accept: "/",  send_sequence: "/1" }
-    
+#① 翻页 , .
+    # - { when: paging, accept: comma, send: Page_Up }
+    # - { when: has_menu, accept: period, send: Page_Down }
+#② 翻页 [ ]
+    # - { when: paging, accept: bracketleft, send: Page_Up }
+    # - { when: has_menu, accept: bracketright, send: Page_Down }
+#③ 翻页 - =
+    - { when: has_menu, accept: minus, send: Page_Up }
+    - { when: has_menu, accept: equal, send: Page_Down }
+# Option/Alt + ←/→ 切换光标至下/上一个拼音
+    - { when: composing, accept: Alt+Left, send: Shift+Left }
+    - { when: composing, accept: Alt+Right, send: Shift+Right }
+    - { when: always, toggle: ascii_punct, accept: Control+Shift+3 }              # 切换中英标点
+    - { when: always, toggle: ascii_punct, accept: Control+Shift+numbersign }     # 切换中英标点
+    - { when: always, toggle: s2t, accept: Control+Shift+4 }       # 切换简繁
+    - { when: always, toggle: s2t, accept: Control+Shift+dollar }  # 切换简繁
+
 #通过快捷键Control+p开关英文单词
     - { when: has_menu, accept: "Control+p", toggle: english_word }
 #通过快捷键Control+m显示拆分
@@ -238,18 +257,6 @@ key_binder:
     - { when: has_menu, accept: "Control+a", toggle: tigress }
 #通过快捷键Control+s开关虎句
     - { when: has_menu, accept: "Control+s", toggle: tiger-sentence }
-
-editor:
-   bindings:
-     space: confirm                        # 空格键：上屏候选项
-     Return: commit_raw_input              # 回车键：上屏原始输入
-     Control+Return: commit_script_text    # Ctrl+回车键：上屏变换后输入（经过 preedit转换的）
-     Control+Shift+Return: commit_comment  # Ctrl+Shift+回车键：上屏 comment
-     BackSpace: revert                     # 退格键：向前删除（撤消上次输入）
-     Delete: delete                        # Delete 键：向后删除
-     Control+BackSpace: back_syllable      # Ctrl+退格键：删除一个音节
-     Control+Delete: delete_candidate      # Ctrl+Delete键：删除或降权候选项
-     Escape: cancel                        # Esc 键：取消输入
 
 # Emoji
 emoji:

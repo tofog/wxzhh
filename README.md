@@ -29,7 +29,7 @@
     - `Control+z`（虎单开关）/ `Control+a`（虎词开关）/ `Control+s`（虎句开关）/ `Control+y`（音码开关）/ `Control+m`（显示拆分）  
 - （二）拼音反查
     1. 万象虎的拼音反查是 '单引号前缀  `反引号后缀  ctrl+y开关  三种方式皆可
-    2. 默认小鹤+虎辅（可以在wanxiang.schema.yaml更改拼音类型）
+    2. 默认小鹤+虎辅（可以在wanxiang_pro.schema.yaml更改拼音类型）
     3. 拼音注音滤镜开关
 - （三）虎码造词
     1. 虎码方案按`反引号作为前缀造词（保存在ti.txt）
@@ -54,13 +54,13 @@
  
 ---
 
-github更新需与添加模型的wanxiang-tiger-fuzhu方案合并方可使用；
+github更新需与添加模型的rime-wanxiang-tiger-fuzhu方案合并方可使用；
 完整更新包在[网盘](https://share.feijipan.com/s/bpHxxlYM)或q群文件
 
 ---
 
 ## 更新日志
-- 6.21：新增拼音反查模式和使用通配符时的自动拆分显示功能、新增虎码4码临时自造词的使用后永久化保存能力（保存在user_words.lua）、修复了部分N前缀候选词被过滤的问题、微调了主题、取消使用default.custom.yaml（为了便于用户使用default.custom.yaml不被更新覆盖）、默认关闭了音码方案自动调频
+- 6.22：新增拼音反查模式和使用通配符时的自动拆分显示功能、新增虎码4码临时自造词的使用后永久化保存能力（保存在user_words.lua）、修复了部分N前缀候选词被过滤的问题、微调了主题、取消使用default.custom.yaml（为了便于用户使用default.custom.yaml不被更新覆盖）、默认关闭了音码方案自动调频、跟随万象更新
 - 6.9：新增在虎单和虎词开关开启时（虎句/音码关闭）的四码唯一自动上屏/四码不唯一五码顶屏/空码清屏功能、移除了9键方案的音码和单词等内容、启用Control+Shift+1在最近的两个方案之间切换
 - 6.7：新增9键虎码整句方案，[使用教程](https://github.com/Rayalizing/TigerMatrix)、默认关闭了23整句/原码整句/9键整句方案，可在default.custom.yaml开启
 - 6.6：网盘新增万象五笔版本

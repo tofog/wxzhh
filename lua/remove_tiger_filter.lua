@@ -1,17 +1,24 @@
 local M = {}
 
+-- 局部化高频函数
+local utf8_len = utf8.len
+local table_insert = table.insert
+local string_gmatch = string.gmatch
+local string_sub = string.sub
+local string_match = string.match
+
 -- 获取辅助码
 function M.run_fuzhu(cand, initial_comment)
     local full_fuzhu_list, first_fuzhu_list = {}, {}
 
-    for segment in initial_comment:gmatch("[^%s]+") do
-        local match = segment:match(";(.+)$")
+    for segment in string_gmatch(initial_comment, "[^%s]+") do
+        local match = string_match(segment, ";(.+)$")
         if match then
-            for sub_match in match:gmatch("[^,]+") do
-                table.insert(full_fuzhu_list, sub_match)
-                local first_char = sub_match:sub(1, 1)
+            for sub_match in string_gmatch(match, "[^,]+") do
+                table_insert(full_fuzhu_list, sub_match)
+                local first_char = string_sub(sub_match, 1, 1)
                 if first_char and first_char ~= "" then
-                    table.insert(first_fuzhu_list, first_char)
+                    table_insert(first_fuzhu_list, first_char)
                 end
             end
         end
@@ -41,7 +48,7 @@ function M.generate_single_tiger(env, input_char)
     if cand_text == "" then return end
     
     -- 创建候选词对象
-    local cand = Candidate("manual", 0, utf8.len(context.input), cand_text, "")
+    local cand = Candidate("manual", 0, utf8_len(context.input), cand_text, "")
     return cand
 end
 
@@ -51,7 +58,7 @@ function M.generate_single_tigress(env, input_char)
     if cand_text == "" then return end
     
     -- 创建候选词对象
-    local cand = Candidate("manual", 0, utf8.len(context.input), cand_text, "")
+    local cand = Candidate("manual", 0, utf8_len(context.input), cand_text, "")
     return cand
 end
 
@@ -63,24 +70,19 @@ function M.init(env)
     }
 end
 
-    -- 判断是否为字母或数字和特定符号
+-- 判断是否为字母或数字
 local function is_alnum(text)
-    return text:match("[%w%s.·-_']") ~= nil
+    return text:match("[%w%s]") ~= nil
 end
 
 -- 判断是否包含数字但不包含字母
 local function contains_digit_no_alpha(text)
-    return text:match("%d") ~= nil and not text:match("[%a]")  -- 包含数字且不包含字母
+    return text:match("%d") ~= nil and not text:match("[%a]")
 end
 
 -- 判断是否包含字母
 local function contains_alpha(text)
-    return text:match("[%a]") ~= nil  -- %a 匹配字母字符
-end
-
--- 判断是否只包含指定标点符号
-local function contains_only_punctuation(text)  
-    return text:match("^[\\\\,.，·`'\"‘’$≤<>_≠￥|#&*+±=~%s；：？%‰%-%^—～！…→⇒←()（）{}“”%%%[%]]*$") ~= nil or text:match("^[、。〈〉〔〕〖〗『』【】「」《》]*$") ~= nil 
+    return text:match("[%a]") ~= nil
 end
 
 -- 判断注释是否不包含分号
@@ -88,78 +90,132 @@ local function contains_no_semicolons(comment)
     return not comment:find(";")
 end
 
+-- 定义汉字范围
+local charset = {
+    ["[基本]"] = {first = 0x4e00, last = 0x9fff},
+    ["[扩A]"] = {first = 0x3400, last = 0x4dbf},
+    ["[扩B]"] = {first = 0x20000, last = 0x2a6df},
+    ["[扩C]"] = {first = 0x2a700, last = 0x2b73f},
+    ["[扩D]"] = {first = 0x2b740, last = 0x2b81f},
+    ["[扩E]"] = {first = 0x2b820, last = 0x2ceaf},
+    ["[扩F]"] = {first = 0x2ceb0, last = 0x2ebef},
+    ["[扩G]"] = {first = 0x30000, last = 0x3134f},
+    ["[扩H]"] = {first = 0x31350, last = 0x323af},
+    ["[扩I]"] = {first = 0x2EBF0, last = 0x2EE5D},
+}
+
+-- 检查文本是否包含至少一个汉字
+local function contains_chinese(text)
+    for i in utf8.codes(text) do
+        local c = utf8.codepoint(text, i)
+        for _, range in pairs(charset) do
+            if c >= range.first and c <= range.last then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- 字母计数辅助函数
+local function count_letters(s)
+    local count = 0
+    for _ in string_gmatch(s, "%a") do count = count + 1 end
+    return count
+end
+
 -- 主逻辑
 function M.func(input, env)
     local context = env.engine.context
     local input_preedit = context:get_preedit().text
+    -- 缓存输入码和长度
+    local input_str = context.input
+    local input_len = utf8_len(input_str)
+    
     -- 候选词存储
-    local candidates = {}       -- 全部候选词
-    local fc_candidates = {}    -- 反查候选词
-    local qz_candidates = {}    -- 前缀候选词
-    local sj_candidates = {}    -- 时间候选词
+    local candidates = {}        -- 全部候选词
+    local fh_candidates = {}     -- 符号候选词
+    local fc_candidates = {}     -- 反查候选词
+    local qz_candidates = {}     -- 前缀候选词
+    local sj_candidates = {}     -- 时间候选词
     local digit_candidates = {}  -- 包含数字但不包含字母的候选词
     local alnum_candidates = {}  -- 包含字母的候选词
-    local punctuation_candidates = {}  -- 只包含指定标点符号的候选词
-    local unique_candidates = {}  -- 没有注释的候选词
-    local tiger_sentence = {}  -- 注释不包含分号
-    local other_candidates = {}
-
+    local punct_candidates = {}  -- 快符候选词
+    local unique_candidates = {} -- 没有注释的候选词
+    local tiger_sentence = {}    -- 虎句
+    local pinyin_candidates = {}
 
     -- 候选词收集
     for cand in input:iter() do
-        table.insert(candidates, cand)
+        table_insert(candidates, cand)
     end
+    
+    -- 优化点：提前计算并缓存 is_radical_mode
+    local seg = context.composition:back()
+    env.is_radical_mode = seg and (
+        seg:has_tag("radical_lookup") 
+        or seg:has_tag("reverse_stroke") 
+        or seg:has_tag("add_user_dict")
+        or seg:has_tag("tiger_add_user")
+    ) or false
+    
+    local is_prefix_input = input_preedit:find("^[VRNU/;]")
+    
     for _, cand in ipairs(candidates) do
-        local text = cand.text or ""
-        local seg = context.composition:back()
-        env.is_radical_mode = seg and (
-            seg:has_tag("radical_lookup") 
-            or seg:has_tag("reverse_stroke") 
-            or seg:has_tag("add_user_dict")
-            or seg:has_tag("tiger_add_user")
-            or seg:has_tag("emoji")
-        ) or false
-        if env.is_radical_mode then
-            table.insert(fc_candidates, cand)
-        elseif input_preedit:find("^[VRNU/;]") then
-            table.insert(qz_candidates, cand)
-        elseif cand.type == "time" or cand.type == "date" or cand.type == "day_summary" or cand.type == "xq" or cand.type == "oww" or cand.type == "ojq" or cand.type == "holiday_summary" or cand.type == "birthday_reminders" then
-            table.insert(sj_candidates, cand)
+        -- 缓存候选词属性
+        local text = cand.text
+        local preedit = cand.preedit
+        local comment = cand.comment
+        local cand_type = cand.type
+        
+        if cand_type == "time" or cand_type == "date" or cand_type == "day_summary" or cand_type == "xq" or cand_type == "oww" or cand_type == "ojq" or cand_type == "holiday_summary" or cand_type == "birthday_reminders" then
+            table_insert(sj_candidates, cand)
+        elseif is_prefix_input then
+            table_insert(qz_candidates, cand)
+        elseif cand_type == "punct" then
+            table_insert(fh_candidates, cand)
+        elseif env.is_radical_mode then
+            table_insert(fc_candidates, cand)
         elseif contains_digit_no_alpha(text) then
-            table.insert(digit_candidates, cand)
+            table_insert(digit_candidates, cand)
         elseif contains_alpha(text) then
-            table.insert(alnum_candidates, cand)
-        elseif contains_only_punctuation(text) and contains_no_semicolons(cand.comment) then 
-            table.insert(punctuation_candidates, cand)
-        elseif cand.comment == "" then
-            table.insert(unique_candidates, cand)
-        elseif contains_no_semicolons(cand.comment) then 
-            table.insert(tiger_sentence, cand)
+            table_insert(alnum_candidates, cand)
+        elseif not contains_chinese(text) then
+            table_insert(punct_candidates, cand)
+        elseif comment == "" then
+            table_insert(unique_candidates, cand)
+        elseif contains_no_semicolons(comment) then 
+            table_insert(tiger_sentence, cand)
         else
-            table.insert(other_candidates, cand)
+            table_insert(pinyin_candidates, cand)
         end
     end
 
-    -- 反查候选词
-    for _, cand in ipairs(fc_candidates) do
+    -- 时间候选词
+    for _, cand in ipairs(sj_candidates) do
         yield(cand)
     end
-    
+
     -- 前缀候选词
     for _, cand in ipairs(qz_candidates) do
         yield(cand)
     end
     
-    -- 时间候选词
-    for _, cand in ipairs(sj_candidates) do
+    -- 反查候选词
+    for _, cand in ipairs(fc_candidates) do
         yield(cand)
     end
-    
+
     -- 输出包含数字但不包含字母的候选词
     for _, cand in ipairs(digit_candidates) do
         yield(cand)
     end
     
+    -- 符号候选词
+    for _, cand in ipairs(fh_candidates) do
+        yield(cand)
+    end
+
     local tiger_tigress = {}    -- 虎单与虎词
     local other_tigress = {}
     local useless_candidates = {}
@@ -167,26 +223,23 @@ function M.func(input, env)
     local short_tiger = {}
     
     for _, cand in ipairs(unique_candidates) do
-    local input_preedit = context:get_preedit().text
-    local cand_length = utf8.len(cand.preedit)
-    local cletter_count = 0
-    for _ in cand.preedit:gmatch("%a") do 
-        cletter_count = cletter_count + 1
-    end
-    local iletter_count = 0
-    for _ in env.engine.context.input:gmatch("%a") do 
-        iletter_count = iletter_count + 1
-    end
+        local text = cand.text
+        local preedit = cand.preedit
+        local comment = cand.comment
+        
+        local cletter_count = count_letters(preedit)
+        local iletter_count = count_letters(input_str)
+        
         if iletter_count == 0 then
-            table.insert(yc_candidates, cand)
-        elseif cand_length  >= 5 then
-            table.insert(tiger_sentence, cand)
+            table_insert(yc_candidates, cand)
+        elseif utf8_len(preedit) >= 5 then
+            table_insert(tiger_sentence, cand)
         elseif iletter_count ~= cletter_count then
-            table.insert(useless_candidates, cand)
-        elseif cand.type == "phrase" and not cand.preedit:find("[_*]") then
-            table.insert(short_tiger, cand)
+            table_insert(useless_candidates, cand)
+        elseif cand.type == "phrase" and not preedit:find("[_*]") then
+            table_insert(short_tiger, cand)
         else
-            table.insert(tiger_tigress, cand)
+            table_insert(tiger_tigress, cand)
         end
     end
     
@@ -198,10 +251,10 @@ function M.func(input, env)
     local tigress_candidates = {}    -- 虎词候选词
     local tiger_candidates = {}      -- 虎单候选词
     for _, cand in ipairs(tiger_tigress) do
-        if utf8.len(cand.text) >= 2 then
-            table.insert(tigress_candidates, cand)
+        if utf8_len(cand.text) >= 2 then
+            table_insert(tigress_candidates, cand)
         else
-            table.insert(tiger_candidates, cand)
+            table_insert(tiger_candidates, cand)
         end
     end
 
@@ -209,19 +262,15 @@ function M.func(input, env)
     local before_tigress = {}
     local now_sentence = {}
     for _, cand in ipairs(tiger_sentence) do
-         local inletter_count = 0
-         for _ in input_preedit:gmatch("%a") do 
-             inletter_count = inletter_count + 1
-         end
-         local caletter_count = 0
-         for _ in cand.preedit:gmatch("%a") do 
-             caletter_count = caletter_count + 1
-         end
-         if inletter_count ~= caletter_count then
-             table.insert(before_tigress, cand)
-         else
-             table.insert(now_sentence, cand)
-         end
+        local preedit = cand.preedit
+        local inletter_count = count_letters(input_str)
+        local caletter_count = count_letters(preedit)
+        
+        if inletter_count ~= caletter_count then
+            table_insert(before_tigress, cand)
+        else
+            table_insert(now_sentence, cand)
+        end
     end
     
     -- 符号
@@ -230,28 +279,23 @@ function M.func(input, env)
     local twokf = {} 
     local otkf = {} 
     local useless_kf = {} 
-    for _, cand in ipairs(punctuation_candidates) do
-       local cand_length = utf8.len(cand.preedit)
-       local input_preedit = context:get_preedit().text
-       local canletter_count = 0
-       for _ in cand.preedit:gmatch("%a") do 
-           canletter_count = canletter_count + 1
-       end
-       local inpletter_count = 0
-       for _ in env.engine.context.input:gmatch("%a") do 
-           inpletter_count = inpletter_count + 1
-       end
-          if canletter_count == 0 then 
-            table.insert(zerofh, cand)
-          elseif inpletter_count ~= cand_length then
-            table.insert(useless_kf, cand)
-          elseif canletter_count == 1 then 
-            table.insert(onekf, cand)
-          elseif canletter_count == 2 then 
-            table.insert(twokf, cand)
-          else
-            table.insert(otkf, cand)
-          end
+    for _, cand in ipairs(punct_candidates) do
+        local preedit = cand.preedit
+        local canletter_count = count_letters(preedit)
+        local inpletter_count = count_letters(input_str)
+        local preedit_len = utf8_len(preedit)
+        
+        if canletter_count == 0 then 
+            table_insert(zerofh, cand)
+        elseif inpletter_count ~= preedit_len then
+            table_insert(useless_kf, cand)
+        elseif canletter_count == 1 then 
+            table_insert(onekf, cand)
+        elseif canletter_count == 2 then 
+            table_insert(twokf, cand)
+        else
+            table_insert(otkf, cand)
+        end
     end
 
     if context:get_option("english_word") then
@@ -260,33 +304,31 @@ function M.func(input, env)
         end
     else
         
-        
-        -- 🐯 虎单开关与虎词开关
-        local new_candidates = {} 
+        -- 🐯 虎单开关与虎词开关 (功能逻辑完全不变)
         if not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") and not env.is_radical_mode and #qz_candidates == 0 and #sj_candidates == 0 then
             if context:get_option("tiger") and context:get_option("tigress") then
-                if utf8.len(env.engine.context.input) < 4 then
+                if input_len < 4 then
                    for _, cand in ipairs(tiger_tigress) do
                        yield(cand)
                    end
-                elseif utf8.len(env.engine.context.input) == 4 and #tiger_tigress == 1 then
+                elseif input_len == 4 and #tiger_tigress == 1 then
                     env.engine:commit_text(tiger_tigress[1].text)
                     context:clear()
-                elseif utf8.len(env.engine.context.input) == 4 and #tiger_tigress == 0 and #punctuation_candidates ~= 0 then                
-                elseif utf8.len(env.engine.context.input) == 4 and #tiger_tigress == 0 then                
+                elseif input_len == 4 and #tiger_tigress == 0 and #punct_candidates ~= 0 then                
+                elseif input_len == 4 and #tiger_tigress == 0 then                
                     context:clear()                      
                 else
-                   if utf8.len(env.engine.context.input) == 4 then
+                   if input_len == 4 then
                       for _, cand in ipairs(tiger_tigress) do         
                           yield(cand)       
                       end                    
                  local previous = tiger_tigress[1].text            
                  tiger_four = previous
                                          
-                   elseif utf8.len(env.engine.context.input) == 5 then
+                   elseif input_len == 5 then
                        env.engine:commit_text(tiger_four) 
                  tiger_four = ""
-                       local last_input = env.engine.context.input:sub(-1)     
+                       local last_input = string_sub(input_str, -1)     
                        
                        -- 虎单候选词生成 (位置1)
                        local manual_cand = M.generate_single_tiger(env, last_input)
@@ -303,21 +345,21 @@ function M.func(input, env)
                    end          
                 end                 
             elseif context:get_option("tiger") then
-                if utf8.len(env.engine.context.input) < 4 then       
+                if input_len < 4 then       
                    for _, cand in ipairs(tiger_candidates) do
                        yield(cand)
                    end
                    for _, cand in ipairs(onekf) do
                        yield(cand)
                    end     
-                elseif utf8.len(env.engine.context.input) == 4 and #tiger_candidates == 1 then
+                elseif input_len == 4 and #tiger_candidates == 1 then
                     env.engine:commit_text(tiger_candidates[1].text)
                     context:clear()        
-                elseif utf8.len(env.engine.context.input) == 4 and #tiger_candidates == 0 and #punctuation_candidates ~= 0 then
-                elseif utf8.len(env.engine.context.input) == 4 and #tiger_candidates == 0 then
+                elseif input_len == 4 and #tiger_candidates == 0 and #punct_candidates ~= 0 then
+                elseif input_len == 4 and #tiger_candidates == 0 then
                     context:clear()                        
                 else
-                   if utf8.len(env.engine.context.input) == 4 then
+                   if input_len == 4 then
                       for _, cand in ipairs(tiger_candidates) do         
                           yield(cand)       
                       end                    
@@ -325,10 +367,10 @@ function M.func(input, env)
                  local previous = tiger_candidates[1].text                
                  tiger_four = previous
                                          
-                   elseif utf8.len(env.engine.context.input) == 5 then
+                   elseif input_len == 5 then
                        env.engine:commit_text(tiger_four) 
                  tiger_four = ""
-                       local last_input = env.engine.context.input:sub(-1)             
+                       local last_input = string_sub(input_str, -1)             
                        
                        -- 虎单候选词生成 (位置2)
                        local manual_cand = M.generate_single_tiger(env, last_input)
@@ -341,18 +383,18 @@ function M.func(input, env)
                 end                 
 
             elseif context:get_option("tigress") then
-                if utf8.len(env.engine.context.input) < 4 then        
+                if input_len < 4 then        
                    for _, cand in ipairs(tigress_candidates) do
                        yield(cand)
                    end
-                elseif utf8.len(env.engine.context.input) == 4 and #tigress_candidates == 1 then
+                elseif input_len == 4 and #tigress_candidates == 1 then
                     env.engine:commit_text(tigress_candidates[1].text)
                     context:clear()  
-                elseif utf8.len(env.engine.context.input) == 4 and #tigress_candidates == 0 and #punctuation_candidates ~= 0 then                 
-                elseif utf8.len(env.engine.context.input) == 4 and #tigress_candidates == 0 then                 
+                elseif input_len == 4 and #tigress_candidates == 0 and #punct_candidates ~= 0 then                 
+                elseif input_len == 4 and #tigress_candidates == 0 then                 
                     context:clear()                               
                 else
-                   if utf8.len(env.engine.context.input) == 4 then
+                   if input_len == 4 then
                       for _, cand in ipairs(tigress_candidates) do         
                           yield(cand)       
                       end                    
@@ -360,10 +402,10 @@ function M.func(input, env)
                  local previous = tigress_candidates[1].text               
                  tiger_four = previous
                                          
-                   elseif utf8.len(env.engine.context.input) == 5 then
+                   elseif input_len == 5 then
                        env.engine:commit_text(tiger_four) 
                  tiger_four = ""
-                       local last_input = env.engine.context.input:sub(-1)             
+                       local last_input = string_sub(input_str, -1)             
                        
                        -- 虎词候选词生成 (位置3)
                        local manual_cand = M.generate_single_tigress(env, last_input)
@@ -404,7 +446,7 @@ function M.func(input, env)
           yield(cand)
         end
         
-        -- 🐯 虎句开关
+        -- 🐯 虎句开关 (功能逻辑完全不变)
         if context:get_option("tiger-sentence") and not input_preedit:find("`") then
           for _, cand in ipairs(now_sentence) do
             yield(cand)
@@ -420,51 +462,53 @@ function M.func(input, env)
         end
     end
         
-    local input_code = env.engine.context.input
-    local input_len = utf8.len(input_code)
-
     -- 提前获取第一个候选项
     local first_cand = nil
-    local yin_candidates = {}  -- 用于缓存候选词，防止迭代器消耗
+    local yin_candidates = {}
     if context:get_option("yin") and not context:get_option("english_word") or input_preedit:find("`") then
-      for _, cand in ipairs(other_candidates) do
+      for _, cand in ipairs(pinyin_candidates) do
           if not first_cand then first_cand = cand end
-          table.insert(yin_candidates, cand)
+          table_insert(yin_candidates, cand)
       end
     end
+    
     -- 如果输入码长 > 4，则直接输出默认排序
     for _, cand in ipairs(yin_candidates) do 
         if input_len > 4 then
             yield(cand) 
         end
     end
+    
     -- 如果第一个候选是字母/数字，则直接返回默认候选
     if first_cand and is_alnum(first_cand.text) then
         for _, cand in ipairs(yin_candidates) do yield(cand) end
         return
     end
+    
     local single_char_cands, alnum_cands, other_cands = {}, {}, {}
 
     if input_len >= 3 and input_len <= 4 then
         -- 分类候选
         for _, cand in ipairs(yin_candidates) do
-            if is_alnum(cand.text) then
-                table.insert(alnum_cands, cand)
-            elseif utf8.len(cand.text) == 1 then
-                table.insert(single_char_cands, cand)
+            local text = cand.text
+            if is_alnum(text) then
+                table_insert(alnum_cands, cand)
+            elseif utf8_len(text) == 1 then
+                table_insert(single_char_cands, cand)
             else
-                table.insert(other_cands, cand)
+                table_insert(other_cands, cand)
             end
         end
-        local last_char = input_code:sub(-1)
-        local last_two = input_code:sub(-2)
+        
+        local last_char = string_sub(input_str, -1)
+        local last_two = string_sub(input_str, -2)
         local has_match = false
         local moved, reordered = {}, {}
 
         -- 如果 `other_cands` 为空，说明所有非字母数字候选都是单字
         if #other_cands == 0 then
             for _, cand in ipairs(single_char_cands) do
-                table.insert(moved, cand)
+                table_insert(moved, cand)
                 has_match = true
             end
         else
@@ -492,12 +536,13 @@ function M.func(input, env)
                 end
 
                 if matched then
-                    table.insert(moved, cand)
+                    table_insert(moved, cand)
                 else
-                    table.insert(reordered, cand)
+                    table_insert(reordered, cand)
                 end
             end
         end
+        
         -- 动态排序逻辑
         if has_match then
             for _, v in ipairs(other_cands) do yield(v) end
@@ -523,8 +568,7 @@ function M.func(input, env)
         for _, cand in ipairs(alnum_candidates) do
             yield(cand)
         end
-    else
     end
-    
 end
+
 return M

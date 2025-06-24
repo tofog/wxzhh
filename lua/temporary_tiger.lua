@@ -19,6 +19,17 @@ function load_permanent_user_words()
     if f then
         return f() or {}
     else
+        -- 文件不存在时创建初始空文件
+        local record = "local user_words = {\n}\nreturn user_words"
+        local fd = io.open(filename, "w")
+        if fd then
+            fd:setvbuf("line")
+            fd:write(record)
+            fd:close()
+            log.info("[tiger_user_words] Created initial user_words.lua")
+        else
+            log.error("[tiger_user_words] Failed to create user_words.lua: " .. (err or "unknown error"))
+        end
         return {}
     end
 end
@@ -55,19 +66,13 @@ function utf8_sub(str, start_char, end_char)
     return string.sub(str, start_byte, end_byte - 1)
 end
 
--- 生成虎码编码
+-- 生成虎码编码（简化版，只处理长度>=3的词）
 function get_tiger_code(word)
     word = filter_punctuation(word)
     local len = utf8.len(word)
-    if len == 0 then return "" end
+    if len < 3 then return "" end  -- 只处理3字及以上词语
 
-    if len == 1 then
-        return code_table[word] or ""
-    elseif len == 2 then
-        local code1 = code_table[utf8_sub(word, 1, 1)] or ""
-        local code2 = code_table[utf8_sub(word, 2, 2)] or ""
-        return string.sub(code1, 1, 2) .. string.sub(code2, 1, 2)
-    elseif len == 3 then
+    if len == 3 then
         local code1 = code_table[utf8_sub(word, 1, 1)] or ""
         local code2 = code_table[utf8_sub(word, 2, 2)] or ""
         local code3 = code_table[utf8_sub(word, 3, 3)] or ""
@@ -107,19 +112,33 @@ end
 local function make_update_history(env)
     return function(commit_text)
         commit_text = filter_punctuation(commit_text)
-        if commit_text == "" or utf8.len(commit_text) < 2 then
+        if commit_text == "" or utf8.len(commit_text) < 3 then
             return
         end
 
-        -- 在更新前检测是否存在
-        local is_repeated = (global_commit_dict[commit_text] ~= nil)
+        -- 获取当前输入编码
+        local input_code = env.engine.context.input
+        
+        -- 新增：跳过原生4码简词
+        if #input_code == 4 then
+            local in_temp_dict = global_commit_dict[commit_text] ~= nil
+            local in_permanent_dict = env.permanent_user_words[commit_text] ~= nil
+            
+            if not in_temp_dict and not in_permanent_dict then
+                return  -- 原生简词不记录
+            end
+        end
 
         -- 生成新编码
         local code = get_tiger_code(commit_text)
         if code == "" then return end
 
+        -- 检测是否存在重复记录
+        local is_repeated = (global_commit_dict[commit_text] ~= nil)
+        local is_shortcut = (#input_code == 4)  -- 简码输入标识
+
         -- 永久化逻辑（在历史记录更新前）
-        if is_repeated then
+        if is_repeated and is_shortcut then
             if not env.permanent_user_words[commit_text] then
                 write_permanent_word_to_file(env, commit_text, code)
             end

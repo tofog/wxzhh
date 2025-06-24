@@ -3200,7 +3200,7 @@ preset_keyboards:
     width: 10
     __patch: 
       - conf/main_en
-      - 'keys/@40/height': { __include: conf/key_height_last }
+      - “keys/@40”: { __include: conf/key_height_last }
     keys:
       # 数字行
       - {
@@ -3368,7 +3368,7 @@ preset_keyboards:
     width: 10
     __patch: 
       - conf/main
-      - 'keys/@40/height': { __include: conf/key_height_last }
+      - “keys/@40”: { __include: conf/key_height_last }
     keys:
       # 数字行
       - {
@@ -3440,7 +3440,7 @@ preset_keyboards:
     width: 10
     __patch: 
       - conf/main
-      - 'keys/@40/height': { __include: conf/key_height_last }
+      - “keys/@40”: { __include: conf/key_height_last }
     keys:
       # 数字行
       - {
@@ -3598,7 +3598,7 @@ preset_keyboards:
     __patch:
       - conf/main_en
       - 'keys/@33/long_click': Keyboard_default
-      - 'keys/@40/height': { __include: conf/key_height_last }
+      - “keys/@40”: { __include: conf/key_height_last }
 
 
   letter_9jian:

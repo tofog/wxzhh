@@ -77,8 +77,8 @@ engine:
     - simplifier@s2tw                               #简繁切换台繁
     - simplifier@s2hk                               #简繁切换港繁
     - lua_filter@*super_tips*M                      #超级提示模块：表情、简码、翻译、化学式、等等靠你想象
-    - lua_filter@*temporary_tiger*F                #临时虎码4码简词
     - simplifier@chinese_english                    #中英翻译
+    - lua_filter@*temporary_tiger*F                #临时虎码4码简词
     - lua_filter@*tiger_chaifen                    #拆分滤镜
     - simplifier@pinyin                            #拼音滤镜 
     - lua_filter@*unicode_display                  #Unicode编码显示

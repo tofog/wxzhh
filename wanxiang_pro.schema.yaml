@@ -2,7 +2,7 @@
 # encoding: utf-8
 #############DIY你想要的方案组合,试试搭配一个自然码+墨奇辅助的方案吧！###########################
 set_shuru_schema:              #配置此项就是选择什么输入法,同时拆分反查和中英文混输也将匹配该输入方案
-  __include: 小鹤双拼             #可选解码规则有   自然码, 自然龙, 汉心龙, 小鹤双拼, 搜狗双拼, 微软双拼, 智能ABC, 紫光双拼， 国标双拼， 龙三 选择一个填入
+  __include: 小鹤双拼             #可选解码规则有   全拼, 自然码, 自然龙, 汉心龙, 小鹤双拼, 搜狗双拼, 微软双拼, 智能ABC, 紫光双拼， 国标双拼， 龙三 选择一个填入
 set_fuzhu_schema:              #配置此项就是选择什么输入法,同时拆分反查和中英文混输也将匹配该输入方案
   __include: 直接辅助           #可选解码规则有:  直接辅助, 间接辅助  选择一个填入
 set_cn_en:                     #中英混输
@@ -47,7 +47,7 @@ switches:
   - name: pinyin  #拼音滤镜
     states: [ 关, 字pīn ]
   - name: tiger-sentence
-    states: [关, 虎句]
+    states: [ 关, 虎句 ]
     reset: 0   
   - name: tigress
     states: [ 关, 虎词 ]
@@ -136,7 +136,6 @@ engine:
     - lua_filter@*autocap_filter                    #英文自动大写
     - reverse_lookup_filter@radical_reverse_lookup  #部件拆字滤镜，放在super_comment前面，进一步被超级注释处理以获得拼音编码+辅助码的提示
     - lua_filter@*super_preedit                     #输入码显示全拼并带上音调
-    - simplifier@emoji                              #Emoji
     - simplifier@s2t                                #简繁切换通繁
     - simplifier@s2tw                               #简繁切换台繁
     - simplifier@s2hk                               #简繁切换港繁
@@ -145,13 +144,14 @@ engine:
     - lua_filter@*remove_tiger_filter              #虎码开关滤镜
     - lua_filter@*temporary_tiger*F                #临时虎码4码简词
     - lua_filter@*cand_sequence*F                  #手动排序，高亮候选 ctrl+j左移动 ctrl+k 右移动 ctrl+0 移除位移 
+    - simplifier@emoji                              #Emoji
     - simplifier@chinese_english                    #中英翻译
     - lua_filter@*super_comment                     #超级注释模块，支持错词提示、辅助码显示，部件组字读音注释，支持个性化配置和关闭相应的功能，详情搜索super_comment进行详细配置
     - lua_filter@*tiger_chaifen                    #拆分滤镜
     - simplifier@pinyin                            #拼音滤镜 
     - lua_filter@*unicode_display                  #Unicode编码显示
     - lua_filter@*text_formatting                   #给自定义用户词扩展一个换行:\n, 制表符：\t, 回车符：\r, 空格：\s
-    - uniquifier                                    #去重
+    - uniquifier                                    # 去重
 
 predictor:
   db: wanxiang-lts-zh-predict.db
@@ -412,7 +412,7 @@ speller:
   # 如果不想让什么标点直接上屏，可以加在 alphabet，或者编辑标点符号为两个及以上的映射
   alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA7890`;*/
   # initials 定义仅作为始码的按键，排除 ` 让单个的 ` 可以直接上屏
-  initials: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA
+  initials: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA;
   delimiter: "''"  # 第一位<空格>是拼音之间的分隔符；第二位<'>表示可以手动输入单引号来分割拼音。
   algebra:
     __patch:

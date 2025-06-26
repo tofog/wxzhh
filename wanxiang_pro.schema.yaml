@@ -2,7 +2,7 @@
 # encoding: utf-8
 #############DIY你想要的方案组合,试试搭配一个自然码+墨奇辅助的方案吧！###########################
 set_shuru_schema:              #配置此项就是选择什么输入法,同时拆分反查和中英文混输也将匹配该输入方案
-  __include: 小鹤双拼             #可选解码规则有   全拼, 自然码, 自然龙, 汉心龙, 小鹤双拼, 搜狗双拼, 微软双拼, 智能ABC, 紫光双拼， 国标双拼， 龙三 选择一个填入
+  __include: 小鹤双拼             #可选解码规则有   自然码, 自然龙, 汉心龙, 小鹤双拼, 搜狗双拼, 微软双拼, 智能ABC, 紫光双拼， 国标双拼， 龙三 选择一个填入
 set_fuzhu_schema:              #配置此项就是选择什么输入法,同时拆分反查和中英文混输也将匹配该输入方案
   __include: 直接辅助           #可选解码规则有:  直接辅助, 间接辅助  选择一个填入
 set_cn_en:                     #中英混输
@@ -10,7 +10,7 @@ set_cn_en:                     #中英混输
 super_comment:                 # 超级注释模块，子项配置 true 开启，false 关闭
   candidate_length: 1          # 候选词辅助码提醒的生效长度，0为关闭  但同时清空其它，应当使用上面开关来处理
   corrector_type: "{comment}"  # 换一种显示类型，比如"({comment})" 
-  comment_type: fuzhu          # 可以选择注释里显示辅助码或者是声调全拼：fuzhu , tone
+  fuzhu_type: fuzhu          # 分包这是一个固定搭配，声调可以使用开关控制
 __include: octagram            #启用语言模型
 #__include: set_chord_composer  #启用并击处理，不懂得不要开启就是了
 ########################以下是方案配置######################################################
@@ -62,8 +62,8 @@ switches:
     states: [ off, tips ]
   - name: tone_display
     states: [ 关, 句pīn ] 
-  - name: fuzhu_switch
-    states: [ 隐, 辅显 ]
+  - options: [ comment_off, fuzhu_hint, tone_hint ]  #开启后在候选的注释里面实时显示辅助码或者全拼声调，不开启则采用系统配置，影响的是comment_format，归属：super_comment.lua
+    states: [ 注关, 辅开, 调开 ]
   - name: ascii_punct  # 中英标点
     states: [ ¥, $ ]
   - name: full_shape
@@ -322,7 +322,7 @@ recognizer:
 #   symbols    Rime 的预设配置是以 '/' 前缀开头输出一系列字符，自定义的修改 symbols.yaml
 punctuator:
   digit_separators: ":,."  #数字分隔符
-  __include: wanxiang_symbols:/symbol_table         # 从 symbols.yaml 导入配置
+  __include: new_symbols:/symbol_table         # 从 symbols.yaml 导入配置
 
 # 从 default 继承快捷键
 key_binder:

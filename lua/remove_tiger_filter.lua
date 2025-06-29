@@ -304,7 +304,7 @@ function M.func(input, env)
         end
     else
         
-        -- 🐯 虎单开关与虎词开关 (功能逻辑完全不变)
+        -- 🐯 虎单开关与虎词开关
         if not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") and not env.is_radical_mode and not is_prefix_input and #sj_candidates == 0 then
             if context:get_option("tiger") and context:get_option("tigress") then
                 if input_len < 4 then
@@ -446,7 +446,7 @@ function M.func(input, env)
           yield(cand)
         end
         
-        -- 🐯 虎句开关 (功能逻辑完全不变)
+        -- 🐯 虎句开关
         if context:get_option("tiger-sentence") and not input_preedit:find("`") then
           for _, cand in ipairs(now_sentence) do
             yield(cand)

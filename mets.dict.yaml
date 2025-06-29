@@ -1,7 +1,7 @@
 #二三整句规则为：1-2根字2码，3-n根字3码
 ---
 name: mets
-version: "2016.06.26"
+version: "0.1"
 sort: by_weight  #字典初始排序，可选original或by_weight
 use_preset_vocabulary: false
 

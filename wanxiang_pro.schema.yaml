@@ -49,16 +49,16 @@ switches:
     states: [ 常, 全 ]
   - name: tiger-sentence
     states: [ 关, 虎句 ]
-    reset: 1   
+    reset: 0
   - name: tigress
     states: [ 关, 虎词 ]
-    reset: 1   
+    reset: 0
   - name: tiger
     states: [ 关, 虎单 ]
-    reset: 1   
+    reset: 0
   - name: yin
     states: [ 关, 音码 ]
-    reset: 0
+    reset: 1
   - name: super_tips
     states: [ off, tips ]
   - name: tone_display

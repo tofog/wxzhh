@@ -11,14 +11,16 @@ schema:
 switches:
   - name: ascii_mode
     states: [ 中, 英 ]
-  - name: chaifen
-    states: [ 隐, 拆显 ]   
-  - name: charset_filter
-    states: [ 小, 大字集 ]
-  - name: pinyin  #拼音滤镜
-    states: [ 关, 字pīn ]
+  - name: chaifen        #拆分滤镜
+    states: [ 隐, 拆 ]   
+  - name: pinyin         #拼音滤镜
+    states: [ 字, pīn ]
+  - name: charset_filter #常用字滤镜
+    states: [ 常, 全 ]
   - name: super_tips
     states: [ off, tips ]
+  - name: ascii_punct    #中英标点
+    states: [ ¥, $ ]
   - name: full_shape
     states: [ 半角, 全角 ]
   - options: [ s2s, s2t, s2hk, s2tw ]
@@ -31,7 +33,6 @@ switches:
     states: [ 关, 翻译 ]
   - name: prediction
     states: [ 关, 预测 ]
-
 
 # 输入引擎
 engine:
@@ -260,16 +261,18 @@ key_binder:
 
 #通过快捷键Control+p开关英文单词
     - { when: has_menu, accept: "Control+p", toggle: english_word }
-#通过快捷键Control+m显示拆分
-    - { when: has_menu, accept: "Control+m", toggle: chaifen }
 #通过快捷键Control+y开关音码
     - { when: has_menu, accept: "Control+y", toggle: yin }
-#通过快捷键Control+z开关虎单
+#通过快捷键Control+q显示注音
+    - { when: has_menu, accept: "Control+q", toggle: pinyin }
+#通过快捷键Control+z开关拆分
     - { when: has_menu, accept: "Control+z", toggle: tiger }
 #使用快捷键Control+a开关虎词
-    - { when: has_menu, accept: "Control+a", toggle: tigress }
+    - { when: has_menu, accept: "Control+a", toggle: tiger }
 #通过快捷键Control+s开关虎句
-    - { when: has_menu, accept: "Control+s", toggle: tiger-sentence }
+    - { when: has_menu, accept: "Control+s", toggle: tigress }
+#通过快捷键Control+d开关虎句
+    - { when: has_menu, accept: "Control+d", toggle: tiger-sentence }
 
 # Emoji
 emoji:

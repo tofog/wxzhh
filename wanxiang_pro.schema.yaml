@@ -386,10 +386,10 @@ key_binder:
 #通过快捷键Control+q显示注音
     - { when: has_menu, accept: "Control+q", toggle: pinyin }
 #通过快捷键Control+z开关拆分
-    - { when: has_menu, accept: "Control+z", toggle: tiger }
-#使用快捷键Control+a开关虎词
+    - { when: has_menu, accept: "Control+z", toggle: chaifen }
+#使用快捷键Control+a开关虎单
     - { when: has_menu, accept: "Control+a", toggle: tiger }
-#通过快捷键Control+s开关虎句
+#通过快捷键Control+s开关虎词
     - { when: has_menu, accept: "Control+s", toggle: tigress }
 #通过快捷键Control+d开关虎句
     - { when: has_menu, accept: "Control+d", toggle: tiger-sentence }

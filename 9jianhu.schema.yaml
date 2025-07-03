@@ -41,7 +41,7 @@ engine:
     #- lua_processor@*select_character     #以词定字，默认左中括号上屏一个词的前一个字，右中括号上屏一个词的后一个字
     - lua_processor@*temporary_tiger*P    #临时虎码4码简词
     - lua_processor@*quick_symbol_text2   #快符引导以及重复上屏，配合quick_symbol_text顶层配置清单定义扩展按键
-    - lua_processor@*super_tips*S          #超级提示模块：表情、简码、翻译、化学式、等等靠你想象
+    - lua_processor@*super_tips            #超级提示模块：表情、简码、翻译、化学式、等等靠你想象
     - lua_processor@*userdb_sync_delete    #危险操作：通过输入 /del 触发,用于清理自定义同步目录下txt用户词典里被标记c<0的词条，操作步骤：必须先同步、再执行/del、再去部署刷新状态、再去同步回收词典，完成动作。
     - ascii_composer                       #处理英文模式及中英文切换
     - recognizer                           #与 matcher 搭配，处理符合特定规则的输入码，如网址、反查等 tags
@@ -77,7 +77,6 @@ engine:
     - simplifier@s2t                                #简繁切换通繁
     - simplifier@s2tw                               #简繁切换台繁
     - simplifier@s2hk                               #简繁切换港繁
-    - lua_filter@*super_tips*M                      #超级提示模块：表情、简码、翻译、化学式、等等靠你想象
     - simplifier@chinese_english                    #中英翻译
     - lua_filter@*temporary_tiger*F                #临时虎码4码简词
     - lua_filter@*tiger_chaifen                    #拆分滤镜
@@ -259,8 +258,8 @@ key_binder:
     - { when: always, toggle: s2t, accept: Control+Shift+4 }       # 切换简繁
     - { when: always, toggle: s2t, accept: Control+Shift+dollar }  # 切换简繁
 
-#通过快捷键Control+p开关英文单词
-    - { when: has_menu, accept: "Control+p", toggle: english_word }
+#通过快捷键Control+m开关英文单词
+    - { when: has_menu, accept: "Control+m", toggle: english_word }
 #通过快捷键Control+y开关音码
     - { when: has_menu, accept: "Control+y", toggle: yin }
 #通过快捷键Control+q显示注音

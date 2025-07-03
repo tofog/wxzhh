@@ -3237,7 +3237,10 @@ preset_keyboards:
         }
       - { click: 'i', long_click: '*',  __include: styl/key }
       - { click: 'o', long_click: '"',  __include: styl/key }
-      - { click: 'p', long_click: "danyinhao",  __include: styl/key }
+      - { click: 'p', 
+          long_click: "danyinhao", 
+          swipe_up: 'zhiding',
+          __include: styl/key }
       # 第 2 行
       - { width: 5 }
       - { click: 'a', long_click: select_all, __include: styl/key }
@@ -3276,7 +3279,11 @@ preset_keyboards:
           __include: styl/key,
         }
       - { click: 'k', long_click: '(', __include: styl/key, swipe_down: rightyi, hint: '右移' }
-      - { click: 'l', long_click: ")", swipe_down: "_", __include: styl/key }
+      - { click: 'l', 
+          long_click: ")", 
+          swipe_down: "_", 
+          swipe_up: 'qingchu',
+          __include: styl/key }
       # 第 3 行
       - { click: Shift_L, composing: split_word, width: 15, __include: styl/key }   
 #      - { click: Shift_L, width: 15 }
@@ -4024,6 +4031,8 @@ preset_keys:
   undo: { label: 撤销, send: Control+z } #>=Android 6.0
   leftyi: { label: 左移, send: Control+j }
   rightyi: { label: 右移, send: Control+k }
+  zhiding: { label: 置顶, send: Control+p }
+  qingchu: { label: 清除, send: Control+l }
 #liquidkeyboard剪切板相关
   liquid_keyboard_switch: { label: 更多, send: function, command: liquid_keyboard, option: "更多" }
   liquid_keyboard_exit: {label: 返回, send: function, command: liquid_keyboard, option: "-1"}  #退出liquidkeyboard

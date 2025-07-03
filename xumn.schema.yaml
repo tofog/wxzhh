@@ -63,10 +63,10 @@ engine:
     - chord_composer                       #并击处理器，与置顶参数：是否启用并击，选项配合使用
     #- lua_processor@*select_character     #以词定字，默认左中括号上屏一个词的前一个字，右中括号上屏一个词的后一个字
     - lua_processor@*temporary_tiger*P    #临时虎码4码简词
-    - lua_processor@*cand_sequence*P      #手动排序，高亮候选 ctrl+j左移动 ctrl+k 右移动 ctrl+0 移除位移
+    - lua_processor@*super_sequence*P      #手动排序，高亮候选 ctrl+j左移动 ctrl+k 右移动 ctrl+l 移除位移  ctrl+p 置顶
     - lua_processor@*tone_fallback         #声调辅助回退，当你输入声调数字错误时，继续输入正确的而不用回退删除
     - lua_processor@*quick_symbol_text2   #快符引导以及重复上屏，配合quick_symbol_text顶层配置清单定义扩展按键
-    - lua_processor@*super_tips*S          #超级提示模块：表情、简码、翻译、化学式、等等靠你想象
+    - lua_processor@*super_tips            #超级提示模块：表情、简码、翻译、化学式、等等靠你想象
     - lua_processor@*userdb_sync_delete    #危险操作：通过输入 /del 触发,用于清理自定义同步目录下txt用户词典里被标记c<0的词条，操作步骤：必须先同步、再执行/del、再去部署刷新状态、再去同步回收词典，完成动作。
     - ascii_composer                       #处理英文模式及中英文切换
     - recognizer                           #与 matcher 搭配，处理符合特定规则的输入码，如网址、反查等 tags
@@ -94,7 +94,7 @@ engine:
     - lua_translator@*unicode              #通过输入大写U引导，并输入Unicode编码获得汉字输出
     - lua_translator@*number_translator    #数字、金额大写，通过输入大写R1234获得候选输出
     - lua_translator@*super_calculator     #超级计算器，Lua内查看高级用法
-    - lua_translator@*input_statistics     #一个输入统计的脚本，以日、周、月、年等维度的统计
+    - lua_translator@*input_stats         #一个输入统计的脚本，以日、周、月、年、临时等维度的统计
     - table_translator@wanxiang_en         #挂接英文输入，参与中英混输
     - table_translator@cn_en               #中英混合词汇表导入
     - script_translator@tiger_user_dict   #虎码自造词之使用词汇入口
@@ -111,13 +111,12 @@ engine:
     - simplifier@s2tw                               #简繁切换台繁
     - simplifier@s2hk                               #简繁切换港繁
     - lua_filter@*search@wanxiang_radical           #部件拆字辅码放在简繁转换之后
-    - lua_filter@*super_tips*M                      #超级提示模块：表情、简码、翻译、化学式、等等靠你想象
     - lua_filter@*remove_tiger_filter              #虎码开关滤镜
     - lua_filter@*temporary_tiger*F                #临时虎码4码简词
-    - lua_filter@*cand_sequence*F                  #手动排序，高亮候选 ctrl+j左移动 ctrl+k 右移动 ctrl+0 移除位移 
+    - lua_filter@*super_sequence*F                  #手动排序，高亮候选 ctrl+j左移动 ctrl+k 右移动 ctrl+l 移除位移  ctrl+p 置顶 
     - simplifier@emoji                              #Emoji
     - simplifier@chinese_english                    #中英翻译
-    - lua_filter@*super_comment                     #超级注释模块，支持错词提示、辅助码显示，部件组字读音注释，支持个性化配置和关闭相应的功能，详情搜索super_comment进行详细配置
+    - lua_filter@*cand_comment                     #超级注释模块，支持错词提示、辅助码显示，部件组字读音注释，支持个性化配置和关闭相应的功能，详情搜索super_comment进行详细配置
     - lua_filter@*tiger_chaifen                    #拆分滤镜
     - lua_filter@*unicode_display                  #Unicode编码显示
     - lua_filter@*text_formatting                   #给自定义用户词扩展一个换行:\n, 制表符：\t, 回车符：\r, 空格：\s
@@ -352,8 +351,8 @@ key_binder:
     - { when: always, toggle: s2t, accept: Control+Shift+4 }       # 切换简繁
     - { when: always, toggle: s2t, accept: Control+Shift+dollar }  # 切换简繁
 
-#通过快捷键Control+p开关英文单词
-    - { when: has_menu, accept: "Control+p", toggle: english_word }
+#通过快捷键Control+m开关英文单词
+    - { when: has_menu, accept: "Control+m", toggle: english_word }
 #通过快捷键Control+y开关音码
     - { when: has_menu, accept: "Control+y", toggle: yin }
 #通过快捷键Control+q显示注音

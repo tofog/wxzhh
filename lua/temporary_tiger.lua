@@ -66,7 +66,7 @@ function utf8_sub(str, start_char, end_char)
     return string.sub(str, start_byte, end_byte - 1)
 end
 
--- 生成虎码编码（简化版，只处理长度>=3的词）
+-- 生成虎码编码
 function get_tiger_code(word)
     word = filter_punctuation(word)
     local len = utf8.len(word)
@@ -116,16 +116,19 @@ local function make_update_history(env)
             return
         end
 
-        -- 获取当前输入编码
-        local input_code = env.engine.context.input
-        
-        -- 新增：跳过原生4码简词
-        if #input_code == 4 then
+        -- 获取当前输入编码及其长度
+        local context = env.engine.context
+        local input_code = context.input
+        local input_len = #input_code
+
+        -- 4码输入时的特殊处理（优化：移除commit调用）
+        if input_len == 4 then
             local in_temp_dict = global_commit_dict[commit_text] ~= nil
             local in_permanent_dict = env.permanent_user_words[commit_text] ~= nil
             
-            if not in_temp_dict and not in_permanent_dict then
-                return  -- 原生简词不记录
+            -- 原生简词不记录
+            if not (in_temp_dict or in_permanent_dict) then
+                return
             end
         end
 
@@ -135,7 +138,7 @@ local function make_update_history(env)
 
         -- 检测是否存在重复记录
         local is_repeated = (global_commit_dict[commit_text] ~= nil)
-        local is_shortcut = (#input_code == 4)  -- 简码输入标识
+        local is_shortcut = (input_len == 4)  -- 简码输入标识
 
         -- 永久化逻辑（在历史记录更新前）
         if is_repeated and is_shortcut then
@@ -218,14 +221,14 @@ end
 
 function P.func() return 2 end  -- 保留空实现
 
--- 候选词生成模块（统一插入逻辑）
+-- 候选词生成模块（优化版）
 local F = {}
 function F.func(input, env)
     local context = env.engine.context
     local input_code = context.input
     local new_candidates = {}
-    local start_pos, end_pos
     local has_original_candidates = false
+    local input_len = #input_code  -- 直接获取输入长度
 
     -- 确保永久词表已初始化
     if env.permanent_seq_words_dict == nil then
@@ -233,23 +236,22 @@ function F.func(input, env)
         env.permanent_seq_words_dict = reverse_seq_words(env.permanent_user_words)
     end
 
-    -- 收集原始候选词
+    -- 收集原始候选词并获取位置信息
+    local start_pos, end_pos
     for cand in input:iter() do
-        if not start_pos then
+        if not start_pos then  -- 获取第一个候选的位置作为参考
             start_pos = cand.start
             end_pos = cand._end
-            has_original_candidates = true
         end
         table.insert(new_candidates, cand)
+        has_original_candidates = true
     end
 
-    -- 确保位置信息存在
-    if not start_pos then
-        start_pos = 0
-        end_pos = string.len(input_code)
-    end
+    -- 设置候选位置（优先使用原始候选位置，否则使用完整输入长度）
+    local cand_start = start_pos or 0
+    local cand_end = end_pos or input_len
 
-    -- 合并永久和临时自造词（永久在前，临时在后）
+    -- 合并永久和临时自造词
     local combined_words = {}
     local combined_count = 0
     
@@ -270,24 +272,26 @@ function F.func(input, env)
         end
     end
 
-    -- 统一插入逻辑
+    -- 统一插入逻辑（强制覆盖完整输入长度）
     if combined_count > 0 then
         if has_original_candidates then
-            -- 有原始候选时，从第二位开始插入
+            -- 从第二位开始插入
             local insert_position = 2
             for i = 1, combined_count do
                 local cand = combined_words[i]
                 local comment = (cand.type == "permanent") and "*" or "⭐"
-                local new_cand = Candidate(cand.type, start_pos, end_pos, cand.text, comment)
+                -- 强制覆盖完整输入长度（解决分段问题）
+                local new_cand = Candidate(cand.type, 0, input_len, cand.text, comment)
                 table.insert(new_candidates, insert_position, new_cand)
                 insert_position = insert_position + 1
             end
         else
-            -- 无原始候选时，直接添加
+            -- 无原始候选时直接添加
             for i = 1, combined_count do
                 local cand = combined_words[i]
                 local comment = (cand.type == "permanent") and "*" or "⭐"
-                local new_cand = Candidate(cand.type, start_pos, end_pos, cand.text, comment)
+                -- 强制覆盖完整输入长度（解决分段问题）
+                local new_cand = Candidate(cand.type, 0, input_len, cand.text, comment)
                 table.insert(new_candidates, new_cand)
             end
         end

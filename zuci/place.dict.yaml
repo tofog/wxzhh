@@ -6,6 +6,8 @@
 name: place
 version: "LTS"
 sort: by_weight
+version: "LTS"
+sort: by_weight
 columns:
   - text
   - weight
@@ -9566,6 +9568,7 @@ columns:
 永寿县	154
 永顺县	194
 永泰县	216
+永太镇	74
 永新县	190
 永兴县	188
 永修县	206

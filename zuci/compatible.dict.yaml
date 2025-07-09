@@ -6,10 +6,13 @@
 name: compatible
 version: "LTS"
 sort: by_weight
+version: "LTS"
+sort: by_weight
 columns:
   - text
   - weight
 ...
+结果	
 看不了	259
 卡住	433
 睡着	

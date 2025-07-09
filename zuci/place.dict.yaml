@@ -6,8 +6,6 @@
 name: place
 version: "LTS"
 sort: by_weight
-version: "LTS"
-sort: by_weight
 columns:
   - text
   - weight

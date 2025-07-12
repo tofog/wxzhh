@@ -463,7 +463,7 @@ function F.func(input, env)
     local combined_words = {}
     local combined_count = 0
     
-    -- 永久词优先（标记为*）
+    -- 永久词优先（标记为⭐）
     if env.permanent_seq_words_dict[input_code] then
         for _, word in ipairs(env.permanent_seq_words_dict[input_code]) do
             combined_count = combined_count + 1
@@ -471,7 +471,7 @@ function F.func(input, env)
         end
     end
     
-    -- 临时词次之（标记为⭐）
+    -- 临时词次之（标记为*）
     if global_seq_words_dict[input_code] then
         for i = #global_seq_words_dict[input_code], 1, -1 do
             local word = global_seq_words_dict[input_code][i]
@@ -487,7 +487,7 @@ function F.func(input, env)
             local insert_position = 2
             for i = 1, combined_count do
                 local cand = combined_words[i]
-                local comment = (cand.type == "permanent") and "*" or "⭐"
+                local comment = (cand.type == "permanent") and "⭐" or "*"
                 local new_cand = Candidate(cand.type, cand_start, cand_end, cand.text, comment)
                 table.insert(new_candidates, insert_position, new_cand)
                 insert_position = insert_position + 1
@@ -496,7 +496,7 @@ function F.func(input, env)
             -- 无原生候选时直接填充
             for i = 1, combined_count do
                 local cand = combined_words[i]
-                local comment = (cand.type == "permanent") and "*" or "⭐"
+                local comment = (cand.type == "permanent") and "⭐" or "*"
                 local new_cand = Candidate(cand.type, cand_start, cand_end, cand.text, comment)
                 table.insert(new_candidates, new_cand)
             end

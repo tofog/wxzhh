@@ -1,4 +1,4 @@
-#原码整句规则为：最短首选编码，1码字有词打2码，无词后加_
+#原码整句规则为：最短首选编码，1码字有词打2码 无词后加' 分词符改为_
 super_comment:                 
   fuzhu_type: fuzhu       # 音码候选词辅助码调序和注释显示
 #__include: set_chord_composer  #启用并击处理，不懂得不要开启就是了
@@ -386,11 +386,11 @@ emoji:
   
 
 speller:
-  alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA`_;*/
+  alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA`_;*/'
   # initials 定义仅作为始码的按键，排除 ` 让单个的 ` 可以直接上屏
   initials: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA;
-  delimiter: " '"     
-  #第一位<空格>是拼音之间的分隔符；第二位<'>表示可以手动输入单引号来分割拼音。
+  delimiter: " _"     
+  #第一位<空格>是拼音之间的分隔符；第二位<_>表示可以手动输入下划线来分割拼音。
   auto_select: true
   auto_select_pattern: ^;\w+ #自动上屏规则  对 [;] 引导的编码实行候选唯一自动上屏
   algebra:

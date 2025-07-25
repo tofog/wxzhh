@@ -28,10 +28,9 @@ schema:
     - wanxiang_stroke    #笔画反查
     - wanxiang_radical   #部件拆字，反查及辅码
     - wanxiang_lookup    #辅助码拆分注释、翻译注释、行政区划匹配、车牌、等等注释类显示滤镜，Lua专用：super_comment
-    - wanxiang_en        #英文输入
+    - wanxiang_mixedcode  #中英文混合词汇
     - tiger_lookup 
     - core2022
-    - tiger
     - tigress
 
 # 开关
@@ -119,14 +118,15 @@ engine:
     - predict_translator                   #预测候选的生成器
     - punct_translator                     #配合 punct_segmentor 转换标点符号
     - script_translator                    #脚本翻译器，用于拼音、粤拼等基于音节表的输入方案
+    - lua_translator@*set_schema           #输入'/zrm'，快速切换为自然码双拼， /flypy→小鹤双拼 /mspy→微软双拼 /zrm→自然码 /sogou→搜狗双拼 /abc→智能ABC /ziguang→紫光双拼 /pyjj→拼音加加 /gbpy→国标双拼 /lxsq→乱序17 /pinyin→全拼
     - lua_translator@*shijian              #农历、日期、节气、节日、时间、周、问候模板等等，触发清单看下文
     - lua_translator@*unicode              #通过输入大写U引导，并输入Unicode编码获得汉字输出
     - lua_translator@*number_translator    #数字、金额大写，通过输入大写R1234获得候选输出
     - lua_translator@*super_calculator     #超级计算器，Lua内查看高级用法
     - lua_translator@*new_statistics      #一个输入统计的脚本，以日、周、月、年、临时等维度的统计
-    - table_translator@wanxiang_en         #挂接英文输入，参与中英混输
-    - table_translator@cn_en               #中英混合词汇表导入
+    - table_translator@custom_phrase       #自定义短语 custom_phrase.txt，用于置顶自定义编码候选词
     - table_translator@chengyu             #简码成语词汇表导入
+    - table_translator@wanxiang_mixedcode  #中英等混合词汇表导入
     - table_translator@radical_lookup      #挂接部件拆字反查
     - table_translator@reverse_stroke      #挂接笔画反查
     - script_translator@user_dict_set      #自造词之使用词汇入口
@@ -209,6 +209,14 @@ translator:
     - xform/9/3/
     - xform/0/4/
 
+# 自定义短语
+custom_phrase:
+  dictionary: ""
+  user_dict: custom_phrase  # 需要手动创建 custom_phrase.txt 文件
+  db_class: stabledb
+  enable_completion: false # 补全提示
+  enable_sentence: false   # 禁止造句
+  initial_quality: 99      # custom_phrase 的权重应该比 pinyin 和 wanxiang_en 大
 
 # 简码词库导入位于jm_dicts得txt文件词库
 chengyu:
@@ -219,20 +227,9 @@ chengyu:
   enable_completion: false
   initial_quality: 1.2 #本表词和系统词重码居后
 
-# 次翻译器，英文
-wanxiang_en:
-  dictionary: wanxiang_en     # 挂载词库 wanxiang_en.dict.yaml
-  enable_sentence: false   # 禁止造句
-  enable_user_dict: false  # 禁用用户词典，是否开启自动调频
-  initial_quality: 1.1     # 初始权重
-  comment_format:          # 自定义提示码
-    - xform/.*//           # 清空提示码
-
-
-# 中英混合词汇
-cn_en:
-  dictionary: ""
-  __include: set_cn_en
+# 中文、英文、数字、符号等混合词汇
+wanxiang_mixedcode:
+  dictionary: wanxiang_mixedcode
   db_class: stabledb
   enable_completion: true
   enable_sentence: false

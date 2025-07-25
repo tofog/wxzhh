@@ -191,6 +191,16 @@ function M.func(input, env)
         end
     end
 
+    local before_alnum = {}
+    local now_alnum = {}
+    for _, cand in ipairs(alnum_candidates) do
+       if utf8.len(input_str) < utf8.len(cand.text) and contains_chinese(cand.text) then
+            table_insert(before_alnum, cand)
+       else 
+            table_insert(now_alnum, cand)
+       end
+    end
+
     -- 时间候选词
     for _, cand in ipairs(sj_candidates) do
         yield(cand)
@@ -301,12 +311,6 @@ function M.func(input, env)
         end
     end
 
-    if context:get_option("english_word") then
-        for _, cand in ipairs(alnum_candidates) do
-            yield(cand)
-        end
-    else
-        
         -- 🐯 虎单开关与虎词开关
         if not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") and not env.is_radical_mode and not is_prefix_input and #sj_candidates == 0 then
             if context:get_option("tiger") and context:get_option("tigress") then
@@ -448,13 +452,24 @@ function M.func(input, env)
         for _, cand in ipairs(otkf) do
           yield(cand)
         end
+       
+        if context:get_option("english_word") then
+            for _, cand in ipairs(now_alnum) do
+               yield(cand)
+            end
+        end
         
         -- 🐯 虎句开关
         if context:get_option("tiger-sentence") and not input_preedit:find("`") then
           for _, cand in ipairs(now_sentence) do
             yield(cand)
           end
-          if not context:get_option("chinese_english") and not context:get_option("yin") then
+          if context:get_option("english_word") then
+              for _, cand in ipairs(before_alnum) do
+                 yield(cand)
+              end
+          end
+          if not context:get_option("yin") then
               for _, cand in ipairs(short_tigress) do
                  yield(cand)
               end
@@ -466,12 +481,11 @@ function M.func(input, env)
               end
           end
         end
-    end
         
     -- 提前获取第一个候选项
     local first_cand = nil
     local yin_candidates = {}
-    if context:get_option("yin") and not context:get_option("english_word") or input_preedit:find("`") then
+    if context:get_option("yin") or input_preedit:find("`") then
       for _, cand in ipairs(pinyin_candidates) do
           if not first_cand then first_cand = cand end
           table_insert(yin_candidates, cand)

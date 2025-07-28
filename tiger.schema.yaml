@@ -6,8 +6,6 @@ schema:
   schema_id: tiger
   name: 万象虎
   dependencies:
-    - wanxiang_mixedcode  #中英文混合词汇
-    - wanxiang_radical  
     - wanxiang_pro
     - tiger_en
     - tiger_lookup 
@@ -97,6 +95,7 @@ engine:
     - lua_translator@*number_translator    #数字、金额大写，通过输入大写R1234获得候选输出
     - lua_translator@*super_calculator     #超级计算器，Lua内查看高级用法
     - lua_translator@*new_statistics      #一个输入统计的脚本，以日、周、月、年、临时等维度的统计
+    - lua_translator@*wj
     - table_translator@tiger_en
     - table_translator@wanxiang_mixedcode  #中英等混合词汇表导入
     - script_translator@tiger_user_dict   #虎码自造词之使用词汇入口
@@ -281,6 +280,7 @@ recognizer:
     number: "^R[0-9]+[.]?[0-9]*"        # 脚本将自动获取第 2 个字符 R 作为触发前缀，响应 lua_translator@number_translator，数字金额大写
     gregorian_to_lunar: "^N[0-9]{1,8}"  # 脚本将自动获取第 2 个字符 N 作为触发前缀，响应 lua_translator@lunar，公历转农历，输入 N20240115 得到「二〇二三年腊月初五」
     calculator: "^V.*$"                 # 计算器功能引导          
+    wj: "^Z.*$"   
 
 # 标点符号
 # punctuator 下面有三个子项：

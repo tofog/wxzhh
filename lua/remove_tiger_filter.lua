@@ -138,6 +138,7 @@ function M.func(input, env)
     local fc_candidates = {}     -- 反查候选词
     local qz_candidates = {}     -- 前缀候选词
     local sj_candidates = {}     -- 时间候选词
+    local wj_candidates = {}     -- 文件候选词
     local digit_candidates = {}  -- 包含数字但不包含字母的候选词
     local alnum_candidates = {}  -- 包含字母的候选词
     local punct_candidates = {}  -- 快符候选词
@@ -170,6 +171,8 @@ function M.func(input, env)
         
         if cand_type == "time" or cand_type == "date" or cand_type == "day_summary" or cand_type == "xq" or cand_type == "oww" or cand_type == "ojq" or cand_type == "holiday_summary" or cand_type == "birthday_reminders" then
             table_insert(sj_candidates, cand)
+        elseif cand_type == env.engine.context.input then
+            table_insert(wj_candidates, cand)
         elseif is_prefix_input then
             table_insert(qz_candidates, cand)
         elseif cand_type == "punct" then
@@ -203,6 +206,11 @@ function M.func(input, env)
 
     -- 时间候选词
     for _, cand in ipairs(sj_candidates) do
+        yield(cand)
+    end
+    
+    -- 文件候选词
+    for _, cand in ipairs(wj_candidates) do
         yield(cand)
     end
 

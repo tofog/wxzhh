@@ -344,7 +344,7 @@ key_binder:
     - { when: always, toggle: s2t, accept: Control+Shift+dollar }  # 切换简繁
 
 #通过快捷键 Control+m开关英文单词
-    - { when: has_menu, accept: " Control+m", toggle: english_word }
+    - { when: has_menu, accept: "Control+m", toggle: english_word }
 #通过快捷键Control+y开关音码
     - { when: has_menu, accept: "Control+y", toggle: yin }
 #通过快捷键Control+q显示注音

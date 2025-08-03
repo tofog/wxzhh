@@ -21,7 +21,7 @@ function CF.run(cand, env)
     if not dict or #cand.text == 0 then return nil end
     
     -- 处理单字候选
-    if #cand.text == 1 then
+    if utf8.len(cand.text) == 1 then
         local append = process_single_char(dict, cand.text)
         return append ~= cand.text and append or nil
     end

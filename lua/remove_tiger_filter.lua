@@ -160,7 +160,7 @@ function M.func(input, env)
         or seg:has_tag("tiger_add_user")
     ) or false
     
-    local is_prefix_input = input_preedit:find("^[VRNU/;]")
+    local is_prefix_input = input_preedit:find("^[ZVRNU/;]")
     
     for _, cand in ipairs(candidates) do
         -- 缓存候选词属性
@@ -181,6 +181,8 @@ function M.func(input, env)
             table_insert(fc_candidates, cand)
         elseif contains_digit_no_alpha(text) then
             table_insert(digit_candidates, cand)
+        elseif cand.text == "呣" or cand.text == "呒" then
+            table_insert(pinyin_candidates, cand)
         elseif contains_alpha(text) then
             table_insert(alnum_candidates, cand)
         elseif not contains_chinese(text) then
@@ -238,7 +240,7 @@ function M.func(input, env)
     local other_tigress = {}
     local useless_candidates = {}
     local yc_candidates = {}    -- 预测候选词
-    local short_tigress = {}
+    local phrase_tigress = {}
     local short_tiger = {}
     
     for _, cand in ipairs(unique_candidates) do
@@ -256,11 +258,22 @@ function M.func(input, env)
         elseif iletter_count ~= cletter_count then
             table_insert(useless_candidates, cand)
         elseif cand.type == "phrase" and utf8_len(cand.text) >= 2 then
-            table_insert(short_tigress, cand)
+            table_insert(phrase_tigress, cand)
         elseif cand.type == "phrase" and not preedit:find("['_*]") then
             table_insert(short_tiger, cand)
         else
             table_insert(tiger_tigress, cand)
+        end
+    end
+    
+    local long_tigress = {}
+    local short_tigress = {}
+    
+    for _, cand in ipairs(phrase_tigress) do
+        if utf8.len(env.engine.context.input) >= 4 then
+            table_insert(long_tigress, cand)
+        else
+            table_insert(short_tigress, cand)
         end
     end
     
@@ -477,8 +490,8 @@ function M.func(input, env)
                  yield(cand)
               end
           end
-          if not context:get_option("yin") then
-              for _, cand in ipairs(short_tigress) do
+          if not context:get_option("chinese_english") and not context:get_option("yin") then
+              for _, cand in ipairs(long_tigress) do
                  yield(cand)
               end
               for _, cand in ipairs(before_tigress) do

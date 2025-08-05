@@ -50,7 +50,7 @@ function ZH.init(env)
         seg:has_tag("add_user_dict")
     ) or false
     env.settings = {
-        chaifen_enabled = env.engine.context:get_option("chaifen") or env.is_radical_mode or input_preedit:find("`") or input_preedit:find("*")
+        chaifen_enabled = env.engine.context:get_option("chaifen") or env.is_radical_mode or input_preedit:find("`") or input_preedit:find("*") and not input_preedit:find("^[ZVRNU/;]")
     }
 end
 

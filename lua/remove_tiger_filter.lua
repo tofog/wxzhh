@@ -62,12 +62,26 @@ function M.generate_single_tigress(env, input_char)
     return cand
 end
 
--- 初始化
+-- 初始化：新增反引号过滤逻辑
 function M.init(env)
     local config = env.engine.schema.config
     env.settings = {
         fuzhu_type = config:get_string("super_comment/fuzhu_type") or ""
     }
+
+    -- ========== 新增：反引号消除核心逻辑 ==========
+    env.search_key = "`"
+    -- 选词时触发：清除输入中的反引号，仅保留主码上屏
+    env.select_notifier = env.engine.context.select_notifier:connect(function(ctx)
+        local input = ctx.input
+        -- 提取反引号前的主码（例如“huma`py”提取为“huma”）
+        local main_code = input:match("^(.-)" .. env.search_key)
+        if main_code and #main_code > 0 then
+            ctx.input = main_code -- 覆盖输入，清除反引号
+            ctx:commit() -- 执行上屏
+        end
+    end)
+    -- =============================================
 end
 
 -- 判断是否为字母或数字
@@ -102,6 +116,14 @@ local charset = {
     ["[扩G]"] = {first = 0x30000, last = 0x3134f},
     ["[扩H]"] = {first = 0x31350, last = 0x323af},
     ["[扩I]"] = {first = 0x2EBF0, last = 0x2EE5D},
+    ["[笔画]"] = {first = 0x31c0, last = 0x31ef },
+    ["[部首扩展]"] = {first = 0x2e80, last = 0x2eff },
+    ["[康熙部首]"] = {first = 0x2f00, last = 0x2fdf },
+    ["[兼容]"] = {first = 0xf900, last = 0xfadf },
+    ["[兼补]"] = {first = 0x2f800, last = 0x2fa1f },
+    ["[汉字结构]"] = {first = 0x2ff0, last = 0x2fff },
+    ["[注音]"] = {first = 0x3100, last = 0x312f },
+    ["[注音扩展]"] = {first = 0x31a0, last = 0x31bf },
 }
 
 -- 检查文本是否包含至少一个汉字
@@ -134,12 +156,15 @@ function M.func(input, env)
     
     -- 候选词存储
     local candidates = {}        -- 全部候选词
+    local final = {}             -- 最终候选词
+    local history = {}           -- 历史简词
     local fh_candidates = {}     -- 符号候选词
     local fc_candidates = {}     -- 反查候选词
     local qz_candidates = {}     -- 前缀候选词
+    local ls_candidates = {}     -- 普通历史候选词
     local sj_candidates = {}     -- 时间候选词
     local wj_candidates = {}     -- 文件候选词
-    local digit_candidates = {}  -- 包含数字但不包含字母的候选词
+    local digit_candidates = {}  -- 包含数字但不包含字母的候选词（已废弃）
     local alnum_candidates = {}  -- 包含字母的候选词
     local punct_candidates = {}  -- 快符候选词
     local unique_candidates = {} -- 没有注释的候选词
@@ -157,7 +182,7 @@ function M.func(input, env)
         seg:has_tag("radical_lookup") 
         or seg:has_tag("reverse_stroke") 
         or seg:has_tag("add_user_dict")
-        or seg:has_tag("tiger_add_user")
+        or seg:has_tag("yin_add_user")
     ) or false
     
     local is_prefix_input = input_preedit:find("^[ZVRNU/;]")
@@ -169,18 +194,22 @@ function M.func(input, env)
         local comment = cand.comment
         local cand_type = cand.type
         
-        if cand_type == "time" or cand_type == "date" or cand_type == "day_summary" or cand_type == "xq" or cand_type == "oww" or cand_type == "ojq" or cand_type == "holiday_summary" or cand_type == "birthday_reminders" then
+        if cand_type == "history" then
+            table_insert(history, cand)
+        elseif cand_type == "time" or cand_type == "date" or cand_type == "day_summary" or cand_type == "xq" or cand_type == "oww" or cand_type == "ojq" or cand_type == "holiday_summary" or cand_type == "birthday_reminders" then
             table_insert(sj_candidates, cand)
         elseif cand_type == env.engine.context.input then
             table_insert(wj_candidates, cand)
         elseif is_prefix_input then
             table_insert(qz_candidates, cand)
+        elseif comment == "" and preedit == "" then
+            table_insert(ls_candidates, cand)
         elseif cand_type == "punct" then
             table_insert(fh_candidates, cand)
         elseif env.is_radical_mode then
             table_insert(fc_candidates, cand)
         elseif contains_digit_no_alpha(text) then
-            table_insert(digit_candidates, cand)
+            table_insert(pinyin_candidates, cand)
         elseif cand.text == "呣" or cand.text == "呒" then
             table_insert(pinyin_candidates, cand)
         elseif contains_alpha(text) then
@@ -208,40 +237,39 @@ function M.func(input, env)
 
     -- 时间候选词
     for _, cand in ipairs(sj_candidates) do
-        yield(cand)
+        table_insert(final, cand)
     end
     
     -- 文件候选词
     for _, cand in ipairs(wj_candidates) do
-        yield(cand)
+        table_insert(final, cand)
     end
 
     -- 前缀候选词
     for _, cand in ipairs(qz_candidates) do
-        yield(cand)
+        table_insert(final, cand)
     end
     
     -- 反查候选词
     for _, cand in ipairs(fc_candidates) do
-        yield(cand)
+        table_insert(final, cand)
     end
 
     -- 输出包含数字但不包含字母的候选词
     for _, cand in ipairs(digit_candidates) do
-        yield(cand)
+        table_insert(final, cand)
     end
     
     -- 符号候选词
     for _, cand in ipairs(fh_candidates) do
-        yield(cand)
+        table_insert(final, cand)
     end
 
-    local tiger_tigress = {}    -- 虎单与虎词
-    local other_tigress = {}
-    local useless_candidates = {}
-    local yc_candidates = {}    -- 预测候选词
-    local phrase_tigress = {}
-    local short_tiger = {}
+    local tiger_tigress = {}      -- 虎单与虎词
+    local useless_candidates = {} -- 没有注释且编码长度不等于输入长度的字，即用来选字的字，在启用spelling_hints后已废弃
+    local yc_candidates = {}      -- 预测候选词
+    local phrase_tigress = {}     -- 来自整句词典的简词
+    local short_tiger = {}        -- 禁用的来自整句词典的编码长度等于输入长度但编码非原码的单字
     
     for _, cand in ipairs(unique_candidates) do
         local text = cand.text
@@ -266,8 +294,8 @@ function M.func(input, env)
         end
     end
     
-    local long_tigress = {}
-    local short_tigress = {}
+    local long_tigress = {}  -- 来自整句词典且码长不小于4的简词
+    local short_tigress = {} -- 禁用的来自整句词典但码长小于4的简词
     
     for _, cand in ipairs(phrase_tigress) do
         if utf8.len(env.engine.context.input) >= 4 then
@@ -279,7 +307,7 @@ function M.func(input, env)
     
     -- 预测候选词
     for _, cand in ipairs(yc_candidates) do
-        yield(cand)
+        table_insert(final, cand)
     end
     
     local tigress_candidates = {}    -- 虎词候选词
@@ -293,8 +321,9 @@ function M.func(input, env)
     end
 
     -- 虎句
-    local before_tigress = {}
-    local now_sentence = {}
+    local before_tigress = {}  -- 有注释且编码长度不等于输入长度的词，即用来选字的词，在启用spelling_hints后囊括了单字
+    local now_sentence = {}    -- 句子
+    local user_sentence = {}   -- 用户自造词
     for _, cand in ipairs(tiger_sentence) do
         local preedit = cand.preedit
         local inletter_count = count_letters(input_str)
@@ -302,6 +331,10 @@ function M.func(input, env)
         
         if inletter_count ~= caletter_count then
             table_insert(before_tigress, cand)
+        elseif cand.type == "user_phrase" then
+            table_insert(user_sentence, cand)
+        elseif cand.type == "phrase" and not preedit:find("['_*]") and utf8_len(cand.text) == 1 then
+            table_insert(short_tiger, cand)
         else
             table_insert(now_sentence, cand)
         end
@@ -332,28 +365,36 @@ function M.func(input, env)
         end
     end
 
+    local config = env.engine.schema.config
+    local four_auto_commit = config:get_bool("tiger_tigress/four_auto_commit") or false -- 4码唯一自动上屏
+    local four_auto_clear = config:get_bool("tiger_tigress/four_auto_clear") or false   -- 4码空码自动清屏
+    local five_commit_four = config:get_bool("tiger_tigress/five_commit_four") or false     -- 5码顶屏
+    local auto = {} 
+    
         -- 🐯 虎单开关与虎词开关
         if not context:get_option("tiger-sentence") and not context:get_option("yin") and not context:get_option("english_word") and not env.is_radical_mode and not is_prefix_input and #sj_candidates == 0 then
             if context:get_option("tiger") and context:get_option("tigress") then
                 if input_len < 4 then
                    for _, cand in ipairs(tiger_tigress) do
-                       yield(cand)
+                       table_insert(final, cand)
                    end
-                elseif input_len == 4 and #tiger_tigress == 1 then
+                elseif input_len == 4 and #tiger_tigress == 1 and four_auto_commit then
                     env.engine:commit_text(tiger_tigress[1].text)
                     context:clear()
-                elseif input_len == 4 and #tiger_tigress == 0 and #punct_candidates ~= 0 then                
-                elseif input_len == 4 and #tiger_tigress == 0 then                
-                    context:clear()                      
+                elseif input_len == 4 and #tiger_tigress == 0 then
+                    if four_auto_clear and #punct_candidates == 0 then
+                      context:clear() 
+                    end
+                 tiger_four = ""
                 else
                    if input_len == 4 then
                       for _, cand in ipairs(tiger_tigress) do         
-                          yield(cand)       
+                          table_insert(final, cand)       
                       end                    
                  local previous = tiger_tigress[1].text            
                  tiger_four = previous
                                          
-                   elseif input_len == 5 then
+                   elseif input_len == 5 and tiger_four ~= "" and five_commit_four then
                        env.engine:commit_text(tiger_four) 
                  tiger_four = ""
                        local last_input = string_sub(input_str, -1)     
@@ -375,27 +416,30 @@ function M.func(input, env)
             elseif context:get_option("tiger") then
                 if input_len < 4 then       
                    for _, cand in ipairs(tiger_candidates) do
-                       yield(cand)
+                       table_insert(final, cand)
                    end
                    for _, cand in ipairs(onekf) do
-                       yield(cand)
+                       table_insert(final, cand)
                    end     
-                elseif input_len == 4 and #tiger_candidates == 1 then
+                elseif input_len == 4 and #tiger_candidates == 1 and four_auto_commit then
                     env.engine:commit_text(tiger_candidates[1].text)
                     context:clear()        
                 elseif input_len == 4 and #tiger_candidates == 0 and #punct_candidates ~= 0 then
                 elseif input_len == 4 and #tiger_candidates == 0 then
-                    context:clear()                        
+                    if four_auto_clear and #punct_candidates == 0 then
+                      context:clear() 
+                    end           
+                 tiger_four = ""
                 else
                    if input_len == 4 then
                       for _, cand in ipairs(tiger_candidates) do         
-                          yield(cand)       
+                          table_insert(final, cand)       
                       end                    
                    
                  local previous = tiger_candidates[1].text                
                  tiger_four = previous
                                          
-                   elseif input_len == 5 then
+                   elseif input_len == 5 and tiger_four ~= "" and five_commit_four then
                        env.engine:commit_text(tiger_four) 
                  tiger_four = ""
                        local last_input = string_sub(input_str, -1)             
@@ -413,24 +457,27 @@ function M.func(input, env)
             elseif context:get_option("tigress") then
                 if input_len < 4 then        
                    for _, cand in ipairs(tigress_candidates) do
-                       yield(cand)
+                       table_insert(final, cand)
                    end
-                elseif input_len == 4 and #tigress_candidates == 1 then
+                elseif input_len == 4 and #tigress_candidates == 1 and four_auto_commit then
                     env.engine:commit_text(tigress_candidates[1].text)
                     context:clear()  
                 elseif input_len == 4 and #tigress_candidates == 0 and #punct_candidates ~= 0 then                 
                 elseif input_len == 4 and #tigress_candidates == 0 then                 
-                    context:clear()                               
+                    if four_auto_clear and #punct_candidates == 0 then
+                      context:clear() 
+                    end
+                 tiger_four = ""
                 else
                    if input_len == 4 then
                       for _, cand in ipairs(tigress_candidates) do         
-                          yield(cand)       
+                          table_insert(final, cand)       
                       end                    
                       
                  local previous = tigress_candidates[1].text               
                  tiger_four = previous
                                          
-                   elseif input_len == 5 then
+                   elseif input_len == 5 and tiger_four ~= "" and five_commit_four then
                        env.engine:commit_text(tiger_four) 
                  tiger_four = ""
                        local last_input = string_sub(input_str, -1)             
@@ -448,57 +495,60 @@ function M.func(input, env)
             end
         elseif context:get_option("tiger") and context:get_option("tigress") then
             for _, cand in ipairs(tiger_tigress) do
-                yield(cand)
+                table_insert(final, cand)
             end
         elseif context:get_option("tiger") then
             for _, cand in ipairs(tiger_candidates) do
-                yield(cand)
+                table_insert(final, cand)
             end
             for _, cand in ipairs(onekf) do
-                yield(cand)
+                table_insert(final, cand)
             end
         elseif context:get_option("tigress") then
             for _, cand in ipairs(tigress_candidates) do
-                yield(cand)
+                table_insert(final, cand)
             end
         else
         end
     
         for _, cand in ipairs(zerofh) do
-          yield(cand)
+          table_insert(final, cand)
         end
         for _, cand in ipairs(twokf) do
-          yield(cand)
+          table_insert(final, cand)
         end
         for _, cand in ipairs(otkf) do
-          yield(cand)
+          table_insert(final, cand)
         end
        
         if context:get_option("english_word") then
             for _, cand in ipairs(now_alnum) do
-               yield(cand)
+               table_insert(final, cand)
             end
         end
         
         -- 🐯 虎句开关
         if context:get_option("tiger-sentence") and not input_preedit:find("`") then
-          for _, cand in ipairs(now_sentence) do
-            yield(cand)
+          for _, cand in ipairs(user_sentence) do -- 用户自造词
+            table_insert(final, cand)
+          end
+          for _, cand in ipairs(now_sentence) do  -- 句子
+            table_insert(final, cand)
           end
           if context:get_option("english_word") then
               for _, cand in ipairs(before_alnum) do
-                 yield(cand)
+                 table_insert(final, cand)
               end
           end
           if not context:get_option("chinese_english") and not context:get_option("yin") then
-              for _, cand in ipairs(long_tigress) do
-                 yield(cand)
+              for _, cand in ipairs(long_tigress) do   -- 来自整句词典且码长不小于4的简词
+                 table_insert(final, cand)
               end
-              for _, cand in ipairs(before_tigress) do
-                 yield(cand)
+              for _, cand in ipairs(before_tigress) do -- 有注释且编码长度不等于输入长度的词，即用来选字的词，在启用spelling_hints后囊括了单字
+                 table_insert(final, cand)
               end
-              for _, cand in ipairs(useless_candidates) do
-                 yield(cand)
+              for _, cand in ipairs(useless_candidates) do -- 没有注释且编码长度不等于输入长度的字，即用来选字的字，在启用spelling_hints后已废弃
+                 table_insert(final, cand)
               end
           end
         end
@@ -516,13 +566,13 @@ function M.func(input, env)
     -- 如果输入码长 > 4，则直接输出默认排序
     for _, cand in ipairs(yin_candidates) do 
         if input_len > 4 then
-            yield(cand) 
+            table_insert(final, cand) 
         end
     end
     
     -- 如果第一个候选是字母/数字，则直接返回默认候选
     if first_cand and is_alnum(first_cand.text) then
-        for _, cand in ipairs(yin_candidates) do yield(cand) end
+        for _, cand in ipairs(yin_candidates) do table_insert(final, cand) end
         return
     end
     
@@ -586,29 +636,63 @@ function M.func(input, env)
         
         -- 动态排序逻辑
         if has_match then
-            for _, v in ipairs(other_cands) do yield(v) end
-            for _, v in ipairs(moved) do yield(v) end
-            for _, v in ipairs(reordered) do yield(v) end
-            for _, v in ipairs(alnum_cands) do yield(v) end
+            for _, v in ipairs(other_cands) do table_insert(final, v) end
+            for _, v in ipairs(moved) do table_insert(final, v) end
+            for _, v in ipairs(reordered) do table_insert(final, v) end
+            for _, v in ipairs(alnum_cands) do table_insert(final, v) end
         else
-            for _, v in ipairs(other_cands) do yield(v) end
-            for _, v in ipairs(alnum_cands) do yield(v) end
-            for _, v in ipairs(moved) do yield(v) end
-            for _, v in ipairs(reordered) do yield(v) end
+            for _, v in ipairs(other_cands) do table_insert(final, v) end
+            for _, v in ipairs(alnum_cands) do table_insert(final, v) end
+            for _, v in ipairs(moved) do table_insert(final, v) end
+            for _, v in ipairs(reordered) do table_insert(final, v) end
         end
 
     else  -- 处理 input_len < 3 的情况
-        for _, cand in ipairs(yin_candidates) do yield(cand) end
+        for _, cand in ipairs(yin_candidates) do table_insert(final, cand) end
     end
     
     if context:get_option("yin") then
         for _, cand in ipairs(alnum_candidates) do
-            yield(cand)
+            table_insert(final, cand)
         end
     elseif context:get_option("chinese_english") then
         for _, cand in ipairs(alnum_candidates) do
+            table_insert(final, cand)
+        end
+    end
+    
+    -- 普通历史候选词
+    for _, cand in ipairs(ls_candidates) do
+        table_insert(final, cand)
+    end
+    
+    if #final > 0 then
+        -- 先输出第一个候选词
+        yield(final[1])
+        
+        -- 然后输出所有history历史简词
+        for _, cand in ipairs(history) do
             yield(cand)
         end
+        
+        -- 最后输出剩余的候选词
+        for i = 2, #final do
+            yield(final[i])
+        end
+    else
+        -- 如果final为空，则只输出history历史简词
+        for _, cand in ipairs(history) do
+            yield(cand)
+        end
+    end
+    
+end
+
+-- 新增：收尾清理（粘在最后即可）
+function M.fini(env)
+    -- 断开选词监听，释放资源
+    if env.select_notifier then
+        env.select_notifier:disconnect()
     end
 end
 

@@ -211,7 +211,6 @@ function M.func(input, env)
         elseif contains_digit_no_alpha(text) then
             table_insert(pinyin_candidates, cand)
         elseif cand.text == "呣" or cand.text == "呒" then
-            table_insert(pinyin_candidates, cand)
         elseif contains_alpha(text) then
             table_insert(alnum_candidates, cand)
         elseif not contains_chinese(text) then
@@ -266,7 +265,7 @@ function M.func(input, env)
     end
 
     local tiger_tigress = {}      -- 虎单与虎词
-    local useless_candidates = {} -- 没有注释且编码长度不等于输入长度的字，即用来选字的字，在启用spelling_hints后已废弃
+    local useless_candidates = {} -- 没有注释且编码长度不等于输入长度的字，即用来选字的副翻译器官虎单字
     local yc_candidates = {}      -- 预测候选词
     local phrase_tigress = {}     -- 来自整句词典的简词
     local short_tiger = {}        -- 禁用的来自整句词典的编码长度等于输入长度但编码非原码的单字
@@ -321,7 +320,8 @@ function M.func(input, env)
     end
 
     -- 虎句
-    local before_tigress = {}  -- 有注释且编码长度不等于输入长度的词，即用来选字的词，在启用spelling_hints后囊括了单字
+    local before_tigress = {}  -- 有注释且编码长度不等于输入长度的词，即用来选字的词
+    local before_tiger = {}    -- 有注释且编码长度不等于输入长度的单字，即用来选字的主翻译器单字
     local now_sentence = {}    -- 句子
     local user_sentence = {}   -- 用户自造词
     for _, cand in ipairs(tiger_sentence) do
@@ -329,8 +329,10 @@ function M.func(input, env)
         local inletter_count = count_letters(input_str)
         local caletter_count = count_letters(preedit)
         
-        if inletter_count ~= caletter_count then
+        if inletter_count ~= caletter_count and utf8_len(cand.text) >= 2 then
             table_insert(before_tigress, cand)
+        elseif inletter_count ~= caletter_count then
+            table_insert(before_tiger, cand)
         elseif cand.type == "user_phrase" then
             table_insert(user_sentence, cand)
         elseif cand.type == "phrase" and not preedit:find("['_*]") and utf8_len(cand.text) == 1 then
@@ -544,10 +546,13 @@ function M.func(input, env)
               for _, cand in ipairs(long_tigress) do   -- 来自整句词典且码长不小于4的简词
                  table_insert(final, cand)
               end
-              for _, cand in ipairs(before_tigress) do -- 有注释且编码长度不等于输入长度的词，即用来选字的词，在启用spelling_hints后囊括了单字
+              for _, cand in ipairs(before_tigress) do -- 有注释且编码长度不等于输入长度的词，即用来选字的词
                  table_insert(final, cand)
               end
-              for _, cand in ipairs(useless_candidates) do -- 没有注释且编码长度不等于输入长度的字，即用来选字的字，在启用spelling_hints后已废弃
+              for _, cand in ipairs(useless_candidates) do -- 没有注释且编码长度不等于输入长度的字，即用来选字的副翻译器官虎单字
+                 table_insert(final, cand)
+              end
+              for _, cand in ipairs(before_tiger) do -- 有注释且编码长度不等于输入长度的单字，即用来选字的主翻译器单字
                  table_insert(final, cand)
               end
           end

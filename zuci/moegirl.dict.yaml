@@ -1,4 +1,15 @@
-
+# Rime dictionary
+# encoding: utf-8
+#
+# ------- 萌娘词库 -------
+---
+name: moegirl
+version: "0.1"
+sort: by_weight
+columns:
+  - text
+  - weight
+...
 阿阿奇和西西帕克	1
 阿阿奇与西西帕克	1
 阿巴阿巴阿巴	1
